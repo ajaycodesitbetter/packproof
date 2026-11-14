@@ -2,8 +2,17 @@ import { promises as fs } from "fs";
 import path from "path";
 
 // Per-user pack library. Production: Netlify Blobs (key/value store included
-// with every Netlify site). Local dev ONLY: JSON file fallback so the feature
-// is testable without Netlify credentials.
+// with every Netlify site). Local dev ONLY: one file per saved pack so the
+// feature is testable without Netlify credentials.
+//
+// Concurrency design: the library is stored as ONE ENTRY PER (user, pack),
+// never as a single JSON document per user. Netlify Blobs has no compare-and-
+// swap, so a read-modify-write of a shared per-user array can lose updates
+// when two tabs save different packs at the same time. Per-pack keys remove
+// that class entirely: saving pack A and unsaving pack B touch different keys
+// and cannot clobber each other. The only remaining race is two opposing
+// toggles of the SAME pack at the same moment; those resolve last-write-wins
+// on that one key, which matches what the user last clicked.
 //
 // Production must never silently fall back to a local file: on a serverless
 // function that file is ephemeral and shared across all users on the same
@@ -11,7 +20,7 @@ import path from "path";
 // is unavailable in production we throw, loudly, instead.
 
 const STORE = "pack-libraries";
-const LOCAL_FILE = path.join("/tmp", "packproof-library.json");
+const LOCAL_DIR = path.join("/tmp", "packproof-library");
 
 function useLocalStore(): boolean {
   if (process.env.NETLIFY) return false;
@@ -23,55 +32,82 @@ function useLocalStore(): boolean {
   return true;
 }
 
-async function readLocal(): Promise<Record<string, string[]>> {
-  let raw: string;
+function entryKey(userId: string, slug: string): string {
+  return `${userId}/${slug}`;
+}
+
+// --- local dev fallback: one small file per (user, pack) ---
+
+function localEntry(userId: string, slug: string): string {
+  return path.join(LOCAL_DIR, encodeURIComponent(userId), encodeURIComponent(slug));
+}
+
+async function listLocal(userId: string): Promise<string[]> {
+  let files: string[];
   try {
-    raw = await fs.readFile(LOCAL_FILE, "utf8");
+    files = await fs.readdir(path.join(LOCAL_DIR, encodeURIComponent(userId)));
   } catch {
-    return {}; // file simply absent yet
+    return []; // user directory simply absent yet
   }
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    // Never let a corrupt file be silently treated as empty: the next write
-    // would wipe every user's local library. Quarantine and fail loudly.
-    await fs.rename(LOCAL_FILE, `${LOCAL_FILE}.corrupt-${Date.now()}`).catch(() => {});
-    throw new Error("Local library file is corrupt; quarantined and refusing to overwrite it.");
+  return files.map(decodeURIComponent).sort();
+}
+
+async function setLocal(userId: string, slug: string, saved: boolean): Promise<void> {
+  const file = localEntry(userId, slug);
+  if (saved) {
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    // Atomic write: tmp file + rename, so a crash mid-write cannot leave a
+    // half-written entry that reads as a corrupt save.
+    const tmp = `${file}.tmp-${process.pid}`;
+    await fs.writeFile(tmp, JSON.stringify({ slug, savedAt: new Date().toISOString() }));
+    await fs.rename(tmp, file);
+  } else {
+    await fs.unlink(file).catch(() => {}); // already absent = already unsaved
   }
 }
 
-async function writeLocal(all: Record<string, string[]>): Promise<void> {
-  // Atomic write: tmp file + rename, so a crash mid-write cannot leave a
-  // half-written (and then quarantined) store.
-  const tmp = `${LOCAL_FILE}.tmp-${process.pid}`;
-  await fs.writeFile(tmp, JSON.stringify(all));
-  await fs.rename(tmp, LOCAL_FILE);
-}
+// --- public API (unchanged signatures) ---
 
 export async function getLibrary(userId: string): Promise<string[]> {
-  if (!useLocalStore()) {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore(STORE);
-    const slugs = await store.get(userId, { type: "json" });
-    return Array.isArray(slugs) ? (slugs as string[]) : [];
+  if (useLocalStore()) return listLocal(userId);
+  const { getStore } = await import("@netlify/blobs");
+  const store = getStore(STORE);
+  const prefix = `${userId}/`;
+  // Without `paginate: true`, list() resolves with the full (unpaginated) set.
+  const { blobs } = await store.list({ prefix });
+  const slugs: string[] = blobs.map((b) => b.key.slice(prefix.length));
+  // Lazy migration from the legacy single-document format (key = userId,
+  // value = slug array): fold its entries into per-pack keys, then remove it.
+  const legacy = await store.get(userId, { type: "json" });
+  if (Array.isArray(legacy)) {
+    for (const slug of legacy as string[]) {
+      if (!slugs.includes(slug)) {
+        slugs.push(slug);
+        await store.setJSON(entryKey(userId, slug), { slug, savedAt: new Date().toISOString() });
+      }
+    }
+    await store.delete(userId);
   }
-  const all = await readLocal();
-  return all[userId] ?? [];
+  return slugs.sort();
 }
 
 export async function toggleInLibrary(userId: string, slug: string): Promise<string[]> {
-  const current = await getLibrary(userId);
-  const next = current.includes(slug)
-    ? current.filter((s) => s !== slug)
-    : [...current, slug];
-  if (!useLocalStore()) {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore(STORE);
-    await store.setJSON(userId, next);
-    return next;
+  if (useLocalStore()) {
+    const current = await listLocal(userId);
+    const saved = !current.includes(slug);
+    await setLocal(userId, slug, saved);
+    return saved ? [...current, slug].sort() : current.filter((s) => s !== slug);
   }
-  const all = await readLocal();
-  all[userId] = next;
-  await writeLocal(all);
-  return next;
+  const { getStore } = await import("@netlify/blobs");
+  const store = getStore(STORE);
+  const key = entryKey(userId, slug);
+  const existing = await store.get(key);
+  const saved = existing === null;
+  if (saved) {
+    // Single-key write: no read-modify-write of shared state.
+    await store.setJSON(key, { slug, savedAt: new Date().toISOString() });
+  } else {
+    await store.delete(key);
+  }
+  return getLibrary(userId);
 }
