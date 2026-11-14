@@ -26,7 +26,7 @@ export default function SaveButton({ slug }: { slug: string }) {
       const r = await fetch("/api/library", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
+        body: JSON.stringify({ slug, saved: saved !== true ? true : false }),
       });
       if (r.ok) {
         const d = await r.json();
