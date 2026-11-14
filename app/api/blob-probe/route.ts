@@ -31,6 +31,19 @@ export async function GET() {
   await time("setJSON_onlyIfNew_existing", store.setJSON(key, ["y"], { onlyIfNew: true }));
   await time("list", store.list({ prefix: "probe/" }));
   await time("delete", store.delete(key));
+  // Read-only checks against the REAL library store: does reading the actual
+  // production data (including the legacy pre-linkage document) hang?
+  const real = getStore("pack-libraries");
+  let realKeys: string[] = [];
+  await time("real_list_all", (async () => {
+    const r = await real.list({});
+    realKeys = r.blobs.map((b) => b.key);
+    return realKeys;
+  })());
+  out["real_keys"] = JSON.stringify(realKeys.map((k) => (k.length > 12 ? k.slice(0, 6) + "..." + k.slice(-4) : k)));
+  for (const k of realKeys.slice(0, 5)) {
+    await time("real_get_" + (k.length > 12 ? k.slice(-6) : k), real.get(k, { type: "json" }));
+  }
   return NextResponse.json(out);
 }
 
