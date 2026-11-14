@@ -96,3 +96,19 @@ export function fmtDate(iso: string): string {
   ];
   return `${d} ${months[m - 1]} ${y}`;
 }
+
+// Idle-aware scoring: "correctly idle" runs are not attempts and must never
+// be counted as wins. Headline scores count attempted runs only.
+export function idleRunCount(e: { tasks: { packTicks?: string[] }[] }): number {
+  return e.tasks.reduce(
+    (n, t) => n + (t.packTicks ?? []).filter((x) => x === "idle").length,
+    0
+  );
+}
+export function attemptedSolved(e: { packSolved: number | null; tasks: { packTicks?: string[] }[] }): number {
+  if (e.packSolved === null) return 0;
+  return e.packSolved - idleRunCount(e);
+}
+export function attemptedTotal(e: { packTotal: number; tasks: { packTicks?: string[] }[] }): number {
+  return e.packTotal - idleRunCount(e);
+}
