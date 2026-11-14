@@ -23,12 +23,15 @@ const STORE = "pack-libraries";
 const LOCAL_DIR = path.join("/tmp", "packproof-library");
 
 function useLocalStore(): boolean {
-  if (process.env.NETLIFY) return false;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "Library store unavailable: NETLIFY env not set in a production build - refusing to fall back to shared local storage."
-    );
-  }
+  // Explicit opt-in for local testing of a production build.
+  if (process.env.PACKPROOF_LOCAL_STORE === "1") return true;
+  // Production always uses Netlify Blobs. We deliberately do NOT gate on
+  // process.env.NETLIFY: it is not set at function runtime on every Netlify
+  // deploy path, and treating that as "local" would silently (or loudly, as
+  // before) break the library. If the Blobs store itself is truly
+  // unavailable, getStore()/setJSON() throw loudly on their own - no silent
+  // fallback to ephemeral shared files either way.
+  if (process.env.NODE_ENV === "production") return false;
   return true;
 }
 
