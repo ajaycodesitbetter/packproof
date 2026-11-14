@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Pack, STATUS_LABEL } from "@/lib/types";
-import { pct } from "@/lib/packs";
+import { pct, attemptedSolved, attemptedTotal } from "@/lib/packs";
 import { Icon } from "./Icons";
 
 function runsLabel(p: Pack): string {
@@ -9,6 +9,15 @@ function runsLabel(p: Pack): string {
   if (e.packSolved === null)
     return `${e.baseTotal} of ${e.runs} runs done · with-pack run in progress · SAMPLE`;
   return `${e.runs} runs · ${e.improved} improved · ${e.regressions} regression${e.regressions === 1 ? "" : "s"} · SAMPLE`;
+}
+
+function packScoreLabel(e: NonNullable<Pack["evidence"]>): string {
+  if (e.packSolved === null) return "PACK run pending";
+  const s = attemptedSolved(e);
+  const t = attemptedTotal(e);
+  return s === e.packSolved && t === e.packTotal
+    ? `PACK ${s}/${t}`
+    : `PACK ${s}/${t} attempted`;
 }
 
 export default function PackCard({ pack }: { pack: Pack }) {
@@ -34,14 +43,14 @@ export default function PackCard({ pack }: { pack: Pack }) {
           <div className={`meter${e.packSolved === null ? "" : ""}`}>
             <div className="base" style={{ width: `${pct(e.baseSolved, e.baseTotal)}%` }}></div>
             {e.packSolved !== null && (
-              <div className="fill" style={{ width: `${pct(e.packSolved, e.packTotal)}%` }}></div>
+              <div className="fill" style={{ width: `${pct(attemptedSolved(e), attemptedTotal(e))}%` }}></div>
             )}
           </div>
           <div className="meter-lbls">
             <span>
               BASE {e.baseSolved}/{e.baseTotal}
             </span>
-            <span>{e.packSolved !== null ? `PACK ${e.packSolved}/${e.packTotal}` : "PACK -"}</span>
+            <span>{packScoreLabel(e)}</span>
           </div>
         </>
       ) : (
