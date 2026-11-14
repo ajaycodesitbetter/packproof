@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getLibrary, setInLibrary } from "@/lib/library";
+import { getLibrary, toggleInLibrary } from "@/lib/library";
 import { getPack } from "@/lib/packs";
 
 export async function GET() {
@@ -18,22 +18,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "sign in required" }, { status: 401 });
   }
   let slug: string | undefined;
-  let saved: unknown;
   try {
-    const body = await req.json();
-    slug = body.slug;
-    saved = body.saved;
+    slug = (await req.json()).slug;
   } catch {
-    return NextResponse.json({ error: "expected JSON body { slug, saved }" }, { status: 400 });
+    return NextResponse.json({ error: "expected JSON body { slug }" }, { status: 400 });
   }
   if (!slug || !getPack(slug)) {
     return NextResponse.json({ error: "unknown pack slug" }, { status: 404 });
   }
-  // Desired-state write: the client says what the end state should be, so
-  // retries and double-clicks are idempotent and there is no read-then-toggle.
-  if (typeof saved !== "boolean") {
-    return NextResponse.json({ error: "expected boolean 'saved'" }, { status: 400 });
-  }
-  const slugs = await setInLibrary(session.user.id, slug, saved);
-  return NextResponse.json({ slugs, saved });
+  const slugs = await toggleInLibrary(session.user.id, slug);
+  return NextResponse.json({ slugs, saved: slugs.includes(slug) });
 }
