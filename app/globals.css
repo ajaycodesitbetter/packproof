@@ -258,3 +258,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .pack:nth-child(3n) { transform: rotate(-0.3deg); box-shadow: 3px 4px 0 rgba(43, 36, 28, 0.15); }
 .pack:nth-child(4n) { transform: rotate(1.1deg); box-shadow: 6px 7px 0 rgba(43, 36, 28, 0.22); }
 .step:nth-child(2) { box-shadow: 3px 4px 0 rgba(43, 36, 28, 0.15); }
+
+/* Library degraded state: honest notice when the store read fails (2026-11-15) */
+.lib-notice { background: var(--card); border: 1.5px solid var(--ink); box-shadow: 5px 6px 0 rgba(43, 36, 28, 0.25); padding: 26px 30px 24px; position: relative; transform: rotate(-0.3deg); }
+.lib-notice::before { content: ""; position: absolute; top: -11px; left: 42px; width: 92px; height: 22px; background: rgba(217, 164, 65, 0.55); transform: rotate(-2deg); }
+.lib-notice .ln-stamp { font-family: "Special Elite", monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; background: var(--red); color: var(--paper); padding: 4px 10px; display: inline-block; transform: rotate(-1.5deg); }
+.lib-notice p { font-size: 14px; margin: 14px 0 0; max-width: 560px; }
+.lib-notice .ln-links { display: flex; gap: 18px; margin-top: 18px; }
+.lib-notice .ln-links a { color: var(--red); font-family: "Special Elite", monospace; font-size: 13px; }
