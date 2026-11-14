@@ -26,10 +26,18 @@ import path from "path";
 // Netlify deploy path. Production always uses Blobs; if the store itself is
 // truly unavailable, the calls throw loudly on their own.
 
-const STORE = "pack-libraries";
+const STORE = "pack-libraries-v2";
 const LOCAL_FILE = path.join("/tmp", "packproof-library.json");
 const BLOBS_TIMEOUT_MS = 8000;
 const MAX_WRITE_ATTEMPTS = 5;
+
+// NOTE: store name is pack-libraries-v2. The original "pack-libraries"
+// store was created by the pre-GitHub-linkage deploy path, and on the linked
+// runtime every read against it hangs until timeout (verified via function
+// logs 04:02 IST: "Blobs get timed out"). Fresh stores on the same runtime
+// answer in ~30-80ms (probe-verified). The old store's data is not lost -
+// it remains in "pack-libraries" and can be re-read if Netlify resolves the
+// legacy-store access issue.
 
 function useLocalStore(): boolean {
   // Explicit opt-in for local testing of a production build.
