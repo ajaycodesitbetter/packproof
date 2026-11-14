@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import CopyButton from "@/components/CopyButton";
 import SaveButton from "@/components/SaveButton";
 import { Icon } from "@/components/Icons";
-import { getAllPacks, getPack, pct, fmtDate } from "@/lib/packs";
+import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
 import { STATUS_LABEL, VERDICT_LABEL, Verdict } from "@/lib/types";
 
 export function generateStaticParams() {
@@ -102,9 +102,11 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <div className="l">baseline ({pct(e.baseSolved, e.baseTotal)}%)</div>
             </div>
             <div className="stat">
-              <div className="v">{e.packSolved !== null ? `${e.packSolved}/${e.packTotal}` : "-"}</div>
+              <div className="v">{e.packSolved !== null ? `${attemptedSolved(e)}/${attemptedTotal(e)}` : "-"}</div>
               <div className="l">
-                {e.packSolved !== null ? `with pack (${pct(e.packSolved, e.packTotal)}%)` : "with pack - in progress"}
+                {e.packSolved !== null
+                  ? `with pack (${pct(attemptedSolved(e), attemptedTotal(e))}% of attempted · ${idleRunCount(e)} correctly idle)`
+                  : "with pack - in progress"}
               </div>
             </div>
             <div className="stat">
@@ -120,6 +122,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <span className="ptape"></span>
               <span className="sample-stamp">Sample data</span>
               <h2>Tasks</h2>
+              <div className="twrap">
               <table className="ttasks">
                 <thead>
                   <tr>
@@ -136,7 +139,13 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
                       <td className="num">
                         {t.baseSolved}/{t.reps}
                       </td>
-                      <td className="num">{t.packSolved !== null ? `${t.packSolved}/${t.reps}` : "-"}</td>
+                      <td className="num">
+                        {t.packSolved !== null
+                          ? t.verdict === "correctly-idle"
+                            ? `${t.reps} idle`
+                            : `${t.packSolved}/${t.reps}`
+                          : "-"}
+                      </td>
                       <td>
                         <span className={`vd ${VD_CLASS[t.verdict]}`}>{VERDICT_LABEL[t.verdict]}</span>
                       </td>
@@ -144,6 +153,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
                   ))}
                 </tbody>
               </table>
+              </div>
               {pack.status === "evidence-complete" && (
                 <p className="note-card" style={{ marginTop: 12 }}>
                   Full run log: <Link href={`/reports/${pack.slug}`} style={{ color: "#b4432f" }}>release report {e.reportId}</Link> (sample data).
