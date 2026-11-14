@@ -33,3 +33,5 @@ export async function GET() {
   await time("delete", store.delete(key));
   return NextResponse.json(out);
 }
+
+// Trigger branch deploy.
