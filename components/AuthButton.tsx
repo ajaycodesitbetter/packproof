@@ -11,9 +11,14 @@ export default function AuthButton() {
   }
   if (!session) {
     return (
-      <button className="btn-sign" style={{ border: "none", cursor: "pointer" }} onClick={() => signIn("github")}>
-        Sign in
-      </button>
+      <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <Link className="btn-sign" href="/library" style={{ textDecoration: "none", background: "none", color: "var(--ink)", border: "1.5px solid rgba(43,36,28,.55)", boxShadow: "2px 2px 0 rgba(43,36,28,.2)" }}>
+          My packs
+        </Link>
+        <button className="btn-sign" style={{ border: "none", cursor: "pointer" }} onClick={() => signIn("github")}>
+          Sign in
+        </button>
+      </span>
     );
   }
   return (
