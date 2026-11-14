@@ -36,8 +36,9 @@ function Ticks({ ticks }: { ticks?: string[] }) {
   );
 }
 
-export default function ReportPage({ params }: { params: { slug: string } }) {
-  const pack = getPack(params.slug);
+export default async function ReportPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const pack = getPack(slug);
   if (!pack || !pack.evidence || pack.status !== "evidence-complete") notFound();
   const e = pack.evidence;
   const basePct = pct(e.baseSolved, e.baseTotal);

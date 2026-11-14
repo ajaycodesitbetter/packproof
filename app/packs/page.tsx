@@ -4,13 +4,14 @@ import Footer from "@/components/Footer";
 import PackCard from "@/components/PackCard";
 import { getAllPacks, getCategories, normalizeCategory, searchPacks } from "@/lib/packs";
 
-export default function PacksPage({
+export default async function PacksPage({
   searchParams,
 }: {
-  searchParams: { q?: string; category?: string };
+  searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const q = searchParams.q?.trim() ?? "";
-  const catParam = searchParams.category ?? "";
+  const sp = await searchParams;
+  const q = sp.q?.trim() ?? "";
+  const catParam = sp.category ?? "";
   const cat = catParam ? normalizeCategory(catParam) : undefined;
 
   let packs = getAllPacks();

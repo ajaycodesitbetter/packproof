@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getPack } from "@/lib/packs";
 import { STATUS_LABEL, VERDICT_LABEL } from "@/lib/types";
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
-  const p = getPack(params.slug);
+export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const p = getPack(slug);
   if (!p) {
-    return NextResponse.json({ error: `no pack named "${params.slug}"` }, { status: 404 });
+    return NextResponse.json({ error: `no pack named "${slug}"` }, { status: 404 });
   }
   return NextResponse.json({
     slug: p.slug,

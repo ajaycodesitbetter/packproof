@@ -20,8 +20,9 @@ const VD_CLASS: Record<Verdict, string> = {
   pending: "pend",
 };
 
-export default function PackPage({ params }: { params: { slug: string } }) {
-  const pack = getPack(params.slug);
+export default async function PackPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const pack = getPack(slug);
   if (!pack) notFound();
   const e = pack.evidence;
   const st = pack.status === "evidence-complete" ? "ok" : pack.status === "partial" ? "part" : "test";

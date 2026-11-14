@@ -9,8 +9,9 @@ export function generateStaticParams() {
   return getCategories().map((c) => ({ cat: c.name }));
 }
 
-export default function CategoryPage({ params }: { params: { cat: string } }) {
-  const decoded = decodeURIComponent(params.cat);
+export default async function CategoryPage({ params }: { params: Promise<{ cat: string }> }) {
+  const { cat: rawCat } = await params;
+  const decoded = decodeURIComponent(rawCat);
   const cat = normalizeCategory(decoded);
   if (!cat) notFound();
   const packs = getByCategory(cat);

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getPack } from "@/lib/packs";
 import { SKILL_FILES } from "@/lib/skill-files";
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
-  const p = getPack(params.slug);
+export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const p = getPack(slug);
   if (!p) {
-    return NextResponse.json({ error: `no pack named "${params.slug}"` }, { status: 404 });
+    return NextResponse.json({ error: `no pack named "${slug}"` }, { status: 404 });
   }
   const file = SKILL_FILES[p.slug];
   if (!p.published || !file) {
