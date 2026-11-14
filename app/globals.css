@@ -217,9 +217,13 @@ table.ttasks { width: 100%; border-collapse: collapse; margin-top: 10px; }
 @media (max-width: 640px) {
   .nav { gap: 12px; padding: 20px 20px 0; }
   .nav-links { order: 3; width: 100%; gap: 18px; font-size: 12.5px; overflow-x: auto; }
-  .nav-right { margin-left: 0; order: 4; width: 100%; }
+  .nav-right { margin-left: 0; order: 4; width: 100%; flex-wrap: wrap; }
+  .nav-right > span { flex: none; margin-left: auto; }
+  .nav-right .copybtn { white-space: nowrap; }
+  .searchbox { flex: 1 1 100%; order: 2; }
+  .searchbox .search { width: 100%; }
   .search { flex: 1; width: auto; padding: 12px 14px; }
-  .search input { font-size: 14px; }
+  .search input { font-size: 14px; min-width: 0; }
   .search kbd { font-size: 11px; padding: 2px 7px; }
   .chip { font-size: 13px; padding: 10px 15px; }
   .btn { font-size: 15px; padding: 14px 24px; }
