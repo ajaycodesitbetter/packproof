@@ -48,7 +48,7 @@ export const PACKS: Pack[] = [
       keptFailures:
         "deprecate-route regressed: with the pack, 2 of 3 runs missed the docs update. Kept in the report, not hidden - fix planned for v0.3.2. Legacy DELETE 500 stays documented, not fixed. Run 14 timeout was a flake; the rerun passed.",
       reproduce:
-        "Tasks, seeds, model version and repo snapshot are pinned in the report. Environment notes and raw logs are attached to the release.",
+        "Pinned in this report (sample values): seed pp034-20261112, model claude-sonnet-4.6, task-repo snapshot pp-tasks-2026-11-12. Environment notes and raw logs are attached to the release.",
     },
     changelog: [
       { version: "0.3.1", date: "2026-11-12", note: "Fixes the header case mismatch" },
