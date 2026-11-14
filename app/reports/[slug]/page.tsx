@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { getAllPacks, getPack, pct, fmtDate } from "@/lib/packs";
+import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
 import { VERDICT_LABEL, Verdict } from "@/lib/types";
 
 export function generateStaticParams() {
@@ -42,7 +42,10 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
   if (!pack || !pack.evidence || pack.status !== "evidence-complete") notFound();
   const e = pack.evidence;
   const basePct = pct(e.baseSolved, e.baseTotal);
-  const packPct = pct(e.packSolved ?? 0, e.packTotal);
+  const attSolved = attemptedSolved(e);
+  const attTotal = attemptedTotal(e);
+  const packPct = pct(attSolved, attTotal);
+  const idleRuns = idleRunCount(e);
 
   return (
     <>
@@ -85,7 +88,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
               <i className="b2" style={{ width: `${packPct}%` }}></i>
             </div>
             <span className="val">
-              {e.packSolved}/{e.packTotal} · {packPct}%
+              {attSolved}/{attTotal} attempted · {packPct}%{idleRuns > 0 ? ` · ${idleRuns} correctly idle` : ""}
             </span>
           </div>
           <div className="sumchips">
@@ -102,6 +105,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
           <span className="ptape"></span>
           <span className="sample-stamp">Sample data</span>
           <h2>Every run, no cherry-picking</h2>
+          <div className="twrap">
           <table className="ttasks">
             <thead>
               <tr>
@@ -124,7 +128,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
                   <td>
                     <Ticks ticks={t.packTicks} />{" "}
                     <span className="num">
-                      {t.packSolved}/{t.reps}
+                      {t.verdict === "correctly-idle" ? `${t.reps} idle` : `${t.packSolved}/${t.reps}`}
                     </span>
                   </td>
                   <td>
@@ -134,6 +138,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="grid2">
