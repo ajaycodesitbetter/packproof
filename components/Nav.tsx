@@ -14,6 +14,7 @@ export default function Nav({ active }: { active?: string }) {
           <Link className={active === "method" ? "active" : ""} href="/method">Methodology</Link>
           <Link className={active === "changelog" ? "active" : ""} href="/changelog">Changelog</Link>
           <Link className={active === "categories" ? "active" : ""} href="/packs#categories">Categories</Link>
+          <Link className={active === "discover" ? "active" : ""} href="/discover">Discover</Link>
         </div>
         <div className="nav-right">
           <SearchBox />

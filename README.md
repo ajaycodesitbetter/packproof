@@ -54,7 +54,8 @@ npx wrangler dev --local --config wrangler.test.jsonc --define "process.env.NODE
 
 `/` home · `/packs` registry (filter + search) · `/packs/[slug]` detail ·
 `/reports/[slug]` release report · `/categories/[cat]` · `/changelog` ·
-`/method` · `/library`
+`/method` · `/library` · `/discover` live GitHub discovery (fresh skill repos +
+star-ranked category shelves, 6h cache)
 
 ## Deploy
 

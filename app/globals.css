@@ -266,3 +266,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .lib-notice p { font-size: 14px; margin: 14px 0 0; max-width: 560px; }
 .lib-notice .ln-links { display: flex; gap: 18px; margin-top: 18px; }
 .lib-notice .ln-links a { color: var(--red); font-family: "Special Elite", monospace; font-size: 13px; }
+
+/* Discover page: live GitHub shelves */
+.dsec-head { display: flex; align-items: baseline; gap: 14px; margin-top: 40px; flex-wrap: wrap; }
+.dsec-head h2 { font-size: 22px; }
+.dsec-note { font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.repo .repo-lang { font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.repo h3 { font-size: 17px; word-break: break-word; }
+.phead .task a { color: var(--red); }
