@@ -40,9 +40,9 @@ export default function PackCard({ pack }: { pack: Pack }) {
       <div className="runs">{runsLabel(pack)}</div>
       {e ? (
         <>
-          <div className={`meter${e.packSolved === null ? "" : ""}`}>
+          <div className="meter">
             <div className="base" style={{ width: `${pct(e.baseSolved, e.baseTotal)}%` }}></div>
-            {e.packSolved !== null && (
+            {e.packSolved !== null && attemptedTotal(e) > 0 && (
               <div className="fill" style={{ width: `${pct(attemptedSolved(e), attemptedTotal(e))}%` }}></div>
             )}
           </div>

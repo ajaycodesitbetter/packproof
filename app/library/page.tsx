@@ -48,8 +48,8 @@ export default async function LibraryPage() {
           <section className="lib-notice">
             <span className="ln-stamp">Temporarily unavailable</span>
             <p>
-              Your saved packs are safe - the store that serves the library is not responding right now,
-              so they cannot be shown. Nothing has been lost.
+              The library isn&apos;t responding, so your saved packs can&apos;t be shown right now.
+              Please try again later.
             </p>
             <p className="ln-links">
               <a href="/library">Try again</a>

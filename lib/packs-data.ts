@@ -174,12 +174,13 @@ export const PACKS: Pack[] = [
     license: "MIT",
     icon: "flask",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Runs a schema migration against a throwaway copy and reports what would break.",
     summary:
       "Runs a schema migration against a throwaway copy of the data and reports what would break - locks, rewrites, dropped indexes - before the real migration window.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-08", note: "First tagged version" }],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "flaky-test-hunter",
@@ -190,7 +191,7 @@ export const PACKS: Pack[] = [
     license: "MIT",
     icon: "gauge",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Re-runs a suspect test under shuffled order and seeds to prove flakiness first.",
     summary:
       "Re-runs a suspect test under shuffled order and random seeds to prove it is actually flaky - and whether it is order-dependent or time-dependent - before anyone touches the test or the code.",
@@ -199,6 +200,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.1", date: "2026-11-05", note: "Separates order-dependence from time-dependence" },
       { version: "0.1.0", date: "2026-10-30", note: "First tagged version" },
     ],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "env-config-doctor",
@@ -209,7 +211,7 @@ export const PACKS: Pack[] = [
     license: "MIT",
     icon: "env",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Diffs env vars across .env files, code usage and deploy config; flags drift.",
     summary:
       "Diffs environment variables across .env files, actual code usage and deploy config, then flags drift: used but unset, set but unused, and values whose shape changed between environments.",
@@ -218,6 +220,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.3", date: "2026-11-11", note: "Shape checks for URLs and ports" },
       { version: "0.0.2", date: "2026-11-03", note: "First draft" },
     ],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "empty-state-audit",
@@ -228,12 +231,13 @@ export const PACKS: Pack[] = [
     license: "MIT",
     icon: "layout",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Finds screens that render blank with zero data and drafts the empty states.",
     summary:
       "Finds screens that render blank or broken with zero data - fresh accounts, cleared carts, first-run lists - and drafts an empty state for each: what it says, what it offers, what it never shows.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-07", note: "First tagged version" }],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "copy-tone-pass",
@@ -244,7 +248,7 @@ export const PACKS: Pack[] = [
     license: "Apache-2.0",
     icon: "type",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Reads UI copy against a tone sheet and flags off-voice strings with rewrites.",
     summary:
       "Reads your UI copy against a tone sheet you provide and flags off-voice strings - each with a suggested rewrite and the rule it broke, so the writer keeps the last word.",
@@ -253,6 +257,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.2", date: "2026-11-12", note: "Rewrite suggestions cite the rule they follow" },
       { version: "0.0.1", date: "2026-11-09", note: "First draft" },
     ],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "a11y-quick-scan",
@@ -263,7 +268,7 @@ export const PACKS: Pack[] = [
     license: "MIT",
     icon: "a11y",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Keyboard-path and contrast sweep of the pages you name, fixes ranked by impact.",
     summary:
       "A keyboard-path and contrast sweep of the pages you name. Findings are ranked by how many users they block, and each fix is small enough to land in the same PR.",
@@ -272,6 +277,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.2", date: "2026-11-10", note: "Ranks fixes by users blocked" },
       { version: "0.1.0", date: "2026-11-01", note: "First tagged version" },
     ],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "competitor-scan",
@@ -282,12 +288,13 @@ export const PACKS: Pack[] = [
     license: "Apache-2.0",
     icon: "scan",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Builds a cited feature and pricing comparison of named competitors from public sources.",
     summary:
       "Builds a feature and pricing comparison of the competitors you name, from public sources only. Every cell carries its source and its retrieval date, and unknown cells stay unknown.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-06", note: "First tagged version" }],
+    reportDue: "Report due 22 Nov",
   },
   {
     slug: "paper-trail",
@@ -298,11 +305,12 @@ export const PACKS: Pack[] = [
     license: "Apache-2.0",
     icon: "doc",
     status: "testing",
-    published: false,
+    published: true,
     tagline: "Traces a claim back to primary sources and rates each hop's reliability.",
     summary:
       "Traces a claim back through its citation chain to the primary source and rates each hop - primary, secondary, blog-of-a-blog - so you can see where the chain goes soft.",
     agents: AGENTS,
     changelog: [{ version: "0.0.1", date: "2026-11-13", note: "First draft" }],
+    reportDue: "Report due 22 Nov",
   },
 ];

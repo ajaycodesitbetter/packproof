@@ -43,11 +43,36 @@ function useLocalStore(): boolean {
   return true;
 }
 
+// Cloudflare deployment: D1 (SQLite) store, selected by the wrangler var.
+// One row per (user, pack) save, so writes are single-row atomic and
+// idempotent - no read-modify-write document and no CAS retry loop needed.
+function useD1Store(): boolean {
+  return process.env.PACKPROOF_STORE === "d1";
+}
+
+interface D1Statement {
+  bind(...values: unknown[]): {
+    all<T = { slug: string }>(): Promise<{ results: T[] }>;
+    run(): Promise<unknown>;
+  };
+}
+interface D1Like {
+  prepare(query: string): D1Statement;
+}
+
+async function getD1(): Promise<D1Like> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const ctx = (await getCloudflareContext({ async: true })) as unknown as { env: Record<string, unknown> };
+  const db = ctx.env.LIBRARY_DB;
+  if (!db) throw new Error("PACKPROOF_STORE=d1 but no LIBRARY_DB binding is configured");
+  return db as D1Like;
+}
+
 function withTimeout<T>(p: Promise<T>, what: string): Promise<T> {
   return Promise.race([
     p,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Blobs ${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS)
+      setTimeout(() => reject(new Error(`${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS)
     ),
   ]);
 }
@@ -87,9 +112,17 @@ export async function getLibrary(userId: string): Promise<string[]> {
     const all = await readLocal();
     return all[userId] ?? [];
   }
+  if (useD1Store()) {
+    const db = await getD1();
+    const { results } = await withTimeout(
+      db.prepare("SELECT slug FROM library_saves WHERE user_id = ? ORDER BY slug").bind(userId).all(),
+      "d1 select"
+    );
+    return results.map((r) => r.slug);
+  }
   const { getStore } = await import("@netlify/blobs");
   const store = getStore(STORE);
-  const slugs = await withTimeout(store.get(userId, { type: "json" }), "get");
+  const slugs = await withTimeout(store.get(userId, { type: "json" }), "Blobs get");
   return Array.isArray(slugs) ? (slugs as string[]) : [];
 }
 
@@ -106,10 +139,22 @@ export async function setInLibrary(userId: string, slug: string, saved: boolean)
     localQueue = run.catch(() => {});
     return run;
   }
+  if (useD1Store()) {
+    const db = await getD1();
+    // Atomic, idempotent single-row write: concurrent saves of different
+    // packs both land; duplicate saves converge; last unsave wins.
+    await withTimeout(
+      saved
+        ? db.prepare("INSERT OR IGNORE INTO library_saves (user_id, slug) VALUES (?, ?)").bind(userId, slug).run()
+        : db.prepare("DELETE FROM library_saves WHERE user_id = ? AND slug = ?").bind(userId, slug).run(),
+      "d1 write"
+    );
+    return getLibrary(userId);
+  }
   const { getStore } = await import("@netlify/blobs");
   const store = getStore(STORE);
   for (let attempt = 1; attempt <= MAX_WRITE_ATTEMPTS; attempt++) {
-    const res = await withTimeout(store.getWithMetadata(userId, { type: "json" }), "getWithMetadata");
+    const res = await withTimeout(store.getWithMetadata(userId, { type: "json" }), "Blobs getWithMetadata");
     const current = Array.isArray(res?.data) ? (res.data as string[]) : [];
     const already = current.includes(slug);
     if (already === saved) {
@@ -124,7 +169,7 @@ export async function setInLibrary(userId: string, slug: string, saved: boolean)
       res?.etag
         ? store.setJSON(userId, next, { onlyIfMatch: res.etag })
         : store.setJSON(userId, next, { onlyIfNew: true }),
-      "setJSON"
+      "Blobs setJSON"
     );
     if (write.modified) return [...next].sort();
     // modified=false: another writer won the race - re-read and retry.
