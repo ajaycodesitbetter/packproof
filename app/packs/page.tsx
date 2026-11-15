@@ -47,7 +47,7 @@ export default async function PacksPage({
         <div className="toolbar">
           <form action="/packs" method="get">
             {cat && <input type="hidden" name="category" value={cat} />}
-            <input type="search" name="q" placeholder="Search packs, e.g. migration" defaultValue={q} aria-label="Search packs" />
+            <input type="search" name="q" placeholder="Filter the registry, e.g. migration" defaultValue={q} aria-label="Filter the registry" />
             <button type="submit">Search</button>
           </form>
         </div>

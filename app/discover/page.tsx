@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { getDiscovery, searchDiscovery, DiscoveredRepo } from "@/lib/discovery";
@@ -39,12 +40,13 @@ function RepoCard({ repo, badge }: { repo: DiscoveredRepo; badge: string }) {
 export default async function DiscoverPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; scope?: string }>;
 }) {
   const sp = await searchParams;
   const q = sp.q?.trim() ?? "";
+  const scope = sp.scope === "all" ? "all" : "skills";
   const data = await getDiscovery();
-  const search = q ? await searchDiscovery(q) : null;
+  const search = q ? await searchDiscovery(q, sp.scope) : null;
 
   return (
     <>
@@ -58,11 +60,12 @@ export default async function DiscoverPage({
             {data.cache === "stale" ? " · showing last good snapshot" : ""}
           </div>
           <p className="task">
-            Repositories matching agent-skill conventions (a SKILL.md file or the agent-skills /
-            claude-skill topics) - not every repo on GitHub. Star counts are a popularity signal,
-            not tested quality; PackProof-tested packs live in <a href="/packs">the registry</a>.
+            Two scopes: <b>skill repos</b> match agent-skill conventions (a SKILL.md file or the
+            agent-skills / claude-skill topics); <b>all repos</b> is GitHub-wide. Neither is every
+            repo on GitHub. Star counts are a popularity signal, not tested quality.
             &quot;SKILL.md found&quot; means the file actually loaded from the repo root.
-            Data is cached about 6 hours between refreshes.
+            Data is cached about 6 hours between refreshes. PackProof&apos;s own packs are
+            in <a href="/packs">the registry</a> (concept stage, sample evidence).
           </p>
         </section>
 
@@ -71,19 +74,42 @@ export default async function DiscoverPage({
             <input
               type="search"
               name="q"
-              placeholder="Search GitHub for skill repos, e.g. design review"
+              placeholder="Search GitHub, e.g. design review"
               defaultValue={q}
-              aria-label="Search GitHub for skill repos"
+              aria-label="Search GitHub"
             />
             <button type="submit">Search</button>
           </form>
         </div>
+        {q && (
+          <div className="catrow">
+            <span className="catlbl">Scope</span>
+            <Link
+              className={`chip${scope === "skills" ? " on" : ""}`}
+              href={`/discover?q=${encodeURIComponent(q)}`}
+            >
+              Skill repos
+            </Link>
+            <Link
+              className={`chip${scope === "all" ? " on" : ""}`}
+              href={`/discover?q=${encodeURIComponent(q)}&scope=all`}
+            >
+              All of GitHub
+            </Link>
+          </div>
+        )}
 
         {search && (
           <section>
             <div className="dsec-head">
-              <h2>GitHub matches for &quot;{search.q}&quot;</h2>
-              <span className="dsec-note">constrained to skill conventions · stars = popularity, not quality</span>
+              <h2>
+                {search.scope === "all" ? "All of GitHub" : "Skill repos"} for &quot;{search.q}&quot;
+              </h2>
+              <span className="dsec-note">
+                {search.scope === "all"
+                  ? "GitHub-wide results, GitHub's own ranking"
+                  : "every term must match · stars = popularity, not quality"}
+              </span>
             </div>
             {search.repos.length > 0 ? (
               <section className="packs">
@@ -95,7 +121,9 @@ export default async function DiscoverPage({
               <p className="empty-note">
                 {search.failed
                   ? `GitHub search is unavailable right now${search.error ? ` (${search.error})` : ""}. Try again later.`
-                  : "No skill-convention repos match that yet. Try a broader term."}
+                  : search.scope === "skills"
+                    ? "No skill-convention repos match every term. Try a broader term, or switch scope to All of GitHub."
+                    : "No repos matched that on GitHub. Try a broader term."}
               </p>
             )}
           </section>
@@ -103,7 +131,7 @@ export default async function DiscoverPage({
 
         <section>
           <div className="dsec-head">
-            <h2>Fresh this week</h2>
+            <h2>Fresh skill repos this week</h2>
             <span className="dsec-note">newly created, newest first</span>
           </div>
           {data.fresh.length > 0 ? (
@@ -116,7 +144,27 @@ export default async function DiscoverPage({
             <p className="empty-note">
               {data.freshFailed
                 ? "GitHub is rate-limiting us right now - try again later."
-                : "No fresh repos matched this week."}
+                : "No fresh skill repos matched this week."}
+            </p>
+          )}
+        </section>
+
+        <section>
+          <div className="dsec-head">
+            <h2>New and notable, any topic</h2>
+            <span className="dsec-note">created this week, 20+ stars</span>
+          </div>
+          {data.freshNotable.length > 0 ? (
+            <section className="packs">
+              {data.freshNotable.map((r) => (
+                <RepoCard key={r.fullName} repo={r} badge="new" />
+              ))}
+            </section>
+          ) : (
+            <p className="empty-note">
+              {data.freshNotableFailed
+                ? "GitHub is rate-limiting us right now - try again later."
+                : "Nothing notable enough for this shelf yet this week."}
             </p>
           )}
         </section>

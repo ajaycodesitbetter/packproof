@@ -137,7 +137,7 @@ export const PACKS: Pack[] = [
       "Does not redesign anything",
       "Does not rate taste - only consistency, states and dead ends",
     ],
-    reportDue: "Pilot tasks queued",
+    reportDue: "Sample plan: pilot tasks queued",
   },
   {
     slug: "research-brief",
@@ -163,7 +163,7 @@ export const PACKS: Pack[] = [
       "Does not answer without sources",
       "Does not hide low-confidence claims in the prose",
     ],
-    reportDue: "Report due 20 Nov",
+    reportDue: "Sample plan: report due 20 Nov",
   },
   {
     slug: "migration-dry-run",
@@ -180,7 +180,7 @@ export const PACKS: Pack[] = [
       "Runs a schema migration against a throwaway copy of the data and reports what would break - locks, rewrites, dropped indexes - before the real migration window.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-08", note: "First tagged version" }],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "flaky-test-hunter",
@@ -200,7 +200,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.1", date: "2026-11-05", note: "Separates order-dependence from time-dependence" },
       { version: "0.1.0", date: "2026-10-30", note: "First tagged version" },
     ],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "env-config-doctor",
@@ -220,7 +220,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.3", date: "2026-11-11", note: "Shape checks for URLs and ports" },
       { version: "0.0.2", date: "2026-11-03", note: "First draft" },
     ],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "empty-state-audit",
@@ -237,7 +237,7 @@ export const PACKS: Pack[] = [
       "Finds screens that render blank or broken with zero data - fresh accounts, cleared carts, first-run lists - and drafts an empty state for each: what it says, what it offers, what it never shows.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-07", note: "First tagged version" }],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "copy-tone-pass",
@@ -257,7 +257,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.2", date: "2026-11-12", note: "Rewrite suggestions cite the rule they follow" },
       { version: "0.0.1", date: "2026-11-09", note: "First draft" },
     ],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "a11y-quick-scan",
@@ -277,7 +277,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.2", date: "2026-11-10", note: "Ranks fixes by users blocked" },
       { version: "0.1.0", date: "2026-11-01", note: "First tagged version" },
     ],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "competitor-scan",
@@ -294,7 +294,7 @@ export const PACKS: Pack[] = [
       "Builds a feature and pricing comparison of the competitors you name, from public sources only. Every cell carries its source and its retrieval date, and unknown cells stay unknown.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-06", note: "First tagged version" }],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
   {
     slug: "paper-trail",
@@ -311,6 +311,6 @@ export const PACKS: Pack[] = [
       "Traces a claim back through its citation chain to the primary source and rates each hop - primary, secondary, blog-of-a-blog - so you can see where the chain goes soft.",
     agents: AGENTS,
     changelog: [{ version: "0.0.1", date: "2026-11-13", note: "First draft" }],
-    reportDue: "Report due 22 Nov",
+    reportDue: "Sample plan: report due 22 Nov",
   },
 ];

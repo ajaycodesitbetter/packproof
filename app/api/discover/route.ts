@@ -8,9 +8,10 @@ import { getDiscovery, searchDiscovery } from "@/lib/discovery";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const q = new URL(req.url).searchParams.get("q");
+  const params = new URL(req.url).searchParams;
+  const q = params.get("q");
   if (q !== null) {
-    return NextResponse.json(await searchDiscovery(q));
+    return NextResponse.json(await searchDiscovery(q, params.get("scope") ?? undefined));
   }
   return NextResponse.json(await getDiscovery());
 }
