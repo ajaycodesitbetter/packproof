@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "@netlify/blobs": "^11.1.9",
     "next": "^15.5.29",
     "next-auth": "^5.0.0-beta.32",
