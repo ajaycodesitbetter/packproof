@@ -108,7 +108,7 @@ export default async function DiscoverPage({
               <span className="dsec-note">
                 {search.scope === "all"
                   ? "GitHub-wide results, GitHub's own ranking"
-                  : "every term must match · stars = popularity, not quality"}
+                  : "every term must match · stars = popularity, not quality · most-starred retrieval, not a curated top list"}
               </span>
             </div>
             {search.repos.length > 0 ? (
@@ -152,7 +152,7 @@ export default async function DiscoverPage({
         <section>
           <div className="dsec-head">
             <h2>New and notable, any topic</h2>
-            <span className="dsec-note">created this week, 20+ stars</span>
+            <span className="dsec-note">created this week, 20+ stars · most-starred retrieval, not curation</span>
           </div>
           {data.freshNotable.length > 0 ? (
             <section className="packs">
@@ -173,7 +173,7 @@ export default async function DiscoverPage({
           <section key={c.category}>
             <div className="dsec-head">
               <h2>{c.category}: most-starred</h2>
-              <span className="dsec-note">popularity signal, not tested quality</span>
+              <span className="dsec-note">popularity signal, not tested quality · not a curated top list</span>
             </div>
             {c.repos.length > 0 ? (
               <section className="packs">
