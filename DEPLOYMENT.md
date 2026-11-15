@@ -29,9 +29,16 @@ of the current remote `main`.
 
 ## 3. Apply the schema (one command after the Turso database exists)
 
-The same migration used for D1 applies unchanged:
+The same migrations used for D1 apply unchanged:
 
     turso db shell <database-name> < migrations/0001_library.sql
+    turso db shell <database-name> < migrations/0002_discovery_cache.sql
+
+The second table lets the /discover page's GitHub snapshot survive serverless
+cold starts (last-good cache across instances). Optional: PACKPROOF_GITHUB_TOKEN
+raises the GitHub search allowance for /discover from 10 to 30 req/min -
+read-only public search only, off by default, attach only with the user's
+approval.
 
 ## 4. Environment variables for the Vercel project
 

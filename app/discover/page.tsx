@@ -1,11 +1,13 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { getDiscovery, DiscoveredRepo } from "@/lib/discovery";
+import { getDiscovery, searchDiscovery, DiscoveredRepo } from "@/lib/discovery";
 
 export const dynamic = "force-dynamic";
 
 function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "date unknown";
+  return new Date(t).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -24,6 +26,7 @@ function RepoCard({ repo, badge }: { repo: DiscoveredRepo; badge: string }) {
       <div className="ver">
         {repo.stars.toLocaleString()} stars
         {repo.license ? ` · ${repo.license}` : ""}
+        {repo.skillFileFound ? " · SKILL.md found" : " · convention match"}
       </div>
       <p className="task">{repo.description ?? "No description on GitHub."}</p>
       <div className="runs">
@@ -33,8 +36,16 @@ function RepoCard({ repo, badge }: { repo: DiscoveredRepo; badge: string }) {
   );
 }
 
-export default async function DiscoverPage() {
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = sp.q?.trim() ?? "";
   const data = await getDiscovery();
+  const search = q ? await searchDiscovery(q) : null;
+
   return (
     <>
       <Nav active="discover" />
@@ -50,9 +61,45 @@ export default async function DiscoverPage() {
             Repositories matching agent-skill conventions (a SKILL.md file or the agent-skills /
             claude-skill topics) - not every repo on GitHub. Star counts are a popularity signal,
             not tested quality; PackProof-tested packs live in <a href="/packs">the registry</a>.
+            &quot;SKILL.md found&quot; means the file actually loaded from the repo root.
             Data is cached about 6 hours between refreshes.
           </p>
         </section>
+
+        <div className="toolbar">
+          <form action="/discover" method="get">
+            <input
+              type="search"
+              name="q"
+              placeholder="Search GitHub for skill repos, e.g. design review"
+              defaultValue={q}
+              aria-label="Search GitHub for skill repos"
+            />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+
+        {search && (
+          <section>
+            <div className="dsec-head">
+              <h2>GitHub matches for &quot;{search.q}&quot;</h2>
+              <span className="dsec-note">constrained to skill conventions · stars = popularity, not quality</span>
+            </div>
+            {search.repos.length > 0 ? (
+              <section className="packs">
+                {search.repos.map((r) => (
+                  <RepoCard key={r.fullName} repo={r} badge="search" />
+                ))}
+              </section>
+            ) : (
+              <p className="empty-note">
+                {search.failed
+                  ? `GitHub search is unavailable right now${search.error ? ` (${search.error})` : ""}. Try again later.`
+                  : "No skill-convention repos match that yet. Try a broader term."}
+              </p>
+            )}
+          </section>
+        )}
 
         <section>
           <div className="dsec-head">
@@ -67,7 +114,9 @@ export default async function DiscoverPage() {
             </section>
           ) : (
             <p className="empty-note">
-              No fresh repos right now{data.errors.length ? " - GitHub is rate-limiting us; try again later." : "."}
+              {data.freshFailed
+                ? "GitHub is rate-limiting us right now - try again later."
+                : "No fresh repos matched this week."}
             </p>
           )}
         </section>
@@ -85,7 +134,9 @@ export default async function DiscoverPage() {
                 ))}
               </section>
             ) : (
-              <p className="empty-note">Nothing loaded for this shelf yet.</p>
+              <p className="empty-note">
+                {c.failed ? "This shelf could not load (GitHub limit). Try again later." : "Nothing matched this shelf yet."}
+              </p>
             )}
           </section>
         ))}

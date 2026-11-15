@@ -1,21 +1,28 @@
-// Live GitHub discovery: new skill-convention repos and star-ranked
-// category shelves, fetched server-side from the GitHub Search API.
+// Live GitHub discovery: new skill-convention repos, star-ranked category
+// shelves, and user-query search, fetched server-side from the GitHub
+// Search API.
 //
 // Honesty rules baked into the data this module returns:
-// - Coverage is "repos matching agent-skill conventions" (SKILL.md mentions,
-//   agent-skills / claude-skill topics), NOT every repo on GitHub.
+// - Coverage is "repos matching agent-skill conventions" (a SKILL.md file
+//   or the agent-skills / claude-skill topics), NOT every repo on GitHub.
 // - Star counts travel with an explicit "popularity, not tested quality"
 //   note; PackProof-tested packs live in the registry, not here.
 // - Every response carries refreshedAt so pages can show data age.
+// - Repos get a skillFileFound badge only after the raw SKILL.md at the
+//   repo root actually loads; a topic/keyword match alone is not called an
+//   installable skill.
 //
 // External repo metadata (names, descriptions) is untrusted content: it is
 // rendered as plain text only and never executed or installed by this site.
 //
-// Rate limits: unauthenticated GitHub search allows 10 req/min. A full
-// refresh uses 6 searches, so results are cached server-side for 6 hours.
-// Setting PACKPROOF_GITHUB_TOKEN (any read-only token; not required) raises
-// the search allowance to 30 req/min - leave unset unless the user approves
-// attaching a token to the deployment.
+// Rate limits: unauthenticated GitHub search allows 10 requests/minute per
+// source IP, and on a shared serverless egress IP that quota is NOT
+// guaranteed to be ours. Mitigations, in order: per-query failure isolation
+// (one failed shelf never blanks the page), a 6h cache, persistence of the
+// latest good snapshot in the libSQL store when configured (survives cold
+// starts and shares across instances), and stale-serve on failure. Setting
+// PACKPROOF_GITHUB_TOKEN (any read-only token; off by default) raises the
+// allowance to 30 req/min - attach only with the user's approval.
 
 const SEARCH_URL = "https://api.github.com/search/repositories";
 const TIMEOUT_MS = 8000;
@@ -26,37 +33,40 @@ export interface DiscoveredRepo {
   url: string;
   description: string | null;
   stars: number;
-  createdAt: string;
+  createdAt: string; // GitHub API ISO timestamp, passed through unmodified
   pushedAt: string;
   license: string | null;
   language: string | null;
+  skillFileFound: boolean; // true only when <repo>/SKILL.md actually loaded
+}
+
+export interface CategoryShelf {
+  category: string;
+  repos: DiscoveredRepo[];
+  failed: boolean;
 }
 
 export interface DiscoveryResult {
   refreshedAt: string;
   cache: "miss" | "hit" | "stale";
   fresh: DiscoveredRepo[];
-  topByCategory: { category: string; query: string; repos: DiscoveredRepo[] }[];
-  errors: string[];
+  freshFailed: boolean;
+  topByCategory: CategoryShelf[];
 }
 
-interface CacheEntry {
-  at: number;
-  data: DiscoveryResult;
-}
-let cache: CacheEntry | null = null;
-
-function sevenDaysAgo(): string {
-  const d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
+export interface DiscoverySearchResult {
+  q: string;
+  refreshedAt: string;
+  repos: DiscoveredRepo[];
+  failed: boolean;
+  error?: string;
 }
 
-async function searchRepos(
-  q: string,
-  sort: "stars" | "updated",
-  perPage: number
-): Promise<DiscoveredRepo[]> {
-  const url = `${SEARCH_URL}?q=${encodeURIComponent(q)}&sort=${sort}&order=desc&per_page=${perPage}`;
+// ---------------------------------------------------------------------------
+// GitHub calls
+// ---------------------------------------------------------------------------
+
+async function githubFetch(url: string): Promise<Response> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": "packproof-discovery",
@@ -65,14 +75,22 @@ async function searchRepos(
   // only; it never appears in responses or logs.
   const token = process.env.PACKPROOF_GITHUB_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
-
-  const res = await fetch(url, {
+  return fetch(url, {
     headers,
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    // Never let the platform cache this at the HTTP layer - freshness is
-    // owned by the 6h cache above so the displayed age is honest.
+    // Freshness is owned by the cache below so the displayed age is honest.
     cache: "no-store",
   });
+}
+
+async function searchRepos(
+  q: string,
+  sort: "stars" | "updated" | undefined,
+  perPage: number
+): Promise<DiscoveredRepo[]> {
+  const sortParam = sort ? `&sort=${sort}&order=desc` : "";
+  const url = `${SEARCH_URL}?q=${encodeURIComponent(q)}${sortParam}&per_page=${perPage}`;
+  const res = await githubFetch(url);
   if (!res.ok) {
     const reset = res.headers.get("x-ratelimit-reset");
     throw new Error(
@@ -102,84 +120,253 @@ async function searchRepos(
     pushedAt: r.pushed_at,
     license: r.license?.spdx_id ?? null,
     language: r.language,
+    skillFileFound: false,
   }));
 }
 
-// Queries that define "agent-skill conventions" for coverage. New repos must
-// mention SKILL.md or carry the community topics; category shelves search
-// within the agent-skills topic.
+// A repo only earns the "skill file found" badge when its root SKILL.md
+// actually loads over raw.githubusercontent.com (no API quota involved).
+// Anything else stays an honest "convention match".
+async function verifySkillFiles(repos: DiscoveredRepo[]): Promise<DiscoveredRepo[]> {
+  return Promise.all(
+    repos.map(async (r) => {
+      try {
+        const res = await fetch(
+          `https://raw.githubusercontent.com/${r.fullName}/HEAD/SKILL.md`,
+          { method: "HEAD", signal: AbortSignal.timeout(5000), cache: "no-store" }
+        );
+        return { ...r, skillFileFound: res.ok };
+      } catch {
+        return r;
+      }
+    })
+  );
+}
+
+function mergeDedupe(sets: DiscoveredRepo[][]): DiscoveredRepo[] {
+  const seen = new Set<string>();
+  return sets
+    .flat()
+    .filter((r) => (seen.has(r.fullName) ? false : (seen.add(r.fullName), true)));
+}
+
+// ---------------------------------------------------------------------------
+// Queries: what "agent-skill conventions" means for coverage
+// ---------------------------------------------------------------------------
+
+function sevenDaysAgo(): string {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 const FRESH_QUERIES = (since: string) => [
   `SKILL.md created:>${since}`,
   `topic:agent-skills created:>${since}`,
   `topic:claude-skill created:>${since}`,
 ];
 
-const CATEGORY_QUERIES: { category: string; query: string }[] = [
-  { category: "Research", query: "topic:agent-skills research" },
-  { category: "UI/UX", query: "topic:agent-skills frontend" },
-  { category: "Backend", query: "topic:agent-skills backend" },
+const CATEGORY_QUERIES: { category: string; queries: string[] }[] = [
+  {
+    category: "Research",
+    queries: ["topic:agent-skills research", "SKILL.md research agent"],
+  },
+  {
+    category: "UI/UX",
+    queries: ["topic:agent-skills frontend", "SKILL.md ui design agent"],
+  },
+  {
+    category: "Backend",
+    queries: ["topic:agent-skills backend", "SKILL.md backend database"],
+  },
 ];
 
-async function buildDiscovery(): Promise<DiscoveryResult> {
-  const errors: string[] = [];
+// User searches are constrained to the same skill conventions so the box
+// answers "find skill repos about X", not "search all of GitHub".
+const USER_QUERY_WRAPPERS = (q: string) => [
+  `${q} SKILL.md`,
+  `${q} topic:agent-skills`,
+  `${q} topic:claude-skill`,
+];
+
+// ---------------------------------------------------------------------------
+// Cache: in-memory per instance, persisted in libSQL when configured so a
+// cold start on another instance still serves the last good snapshot.
+// ---------------------------------------------------------------------------
+
+interface SnapshotEntry {
+  at: number;
+  data: DiscoveryResult;
+}
+let memSnapshot: SnapshotEntry | null = null;
+const memQueryCache = new Map<string, { at: number; data: DiscoverySearchResult }>();
+
+interface LibSqlLike {
+  execute(q: { sql: string; args: import("@libsql/client").InArgs }): Promise<{ rows: Array<Record<string, unknown>> }>;
+}
+let libsqlClient: Promise<LibSqlLike> | null = null;
+
+function useLibSql(): boolean {
+  return process.env.PACKPROOF_STORE === "libsql" && !!process.env.TURSO_DATABASE_URL;
+}
+
+async function getLibSql(): Promise<LibSqlLike> {
+  if (libsqlClient) return libsqlClient;
+  const pending: Promise<LibSqlLike> = (async () => {
+    const url = process.env.TURSO_DATABASE_URL!;
+    const mod = url.startsWith("file:")
+      ? await import("@libsql/client")
+      : await import("@libsql/client/web");
+    return mod.createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  })();
+  libsqlClient = pending;
+  pending.catch(() => {
+    if (libsqlClient === pending) libsqlClient = null;
+  });
+  return pending;
+}
+
+async function loadPersistedSnapshot(): Promise<SnapshotEntry | null> {
+  if (!useLibSql()) return null;
+  try {
+    const db = await getLibSql();
+    const res = await db.execute({
+      sql: "SELECT payload, fetched_at FROM discovery_cache WHERE key = 'latest'",
+      args: [],
+    });
+    const row = res.rows[0];
+    if (!row) return null;
+    return {
+      at: Date.parse(String(row.fetched_at)) || 0,
+      data: JSON.parse(String(row.payload)) as DiscoveryResult,
+    };
+  } catch {
+    return null; // table may not exist yet; in-memory cache still works
+  }
+}
+
+async function persistSnapshot(entry: SnapshotEntry): Promise<void> {
+  if (!useLibSql()) return;
+  try {
+    const db = await getLibSql();
+    await db.execute({
+      sql: `INSERT INTO discovery_cache (key, payload, fetched_at) VALUES ('latest', ?, ?)
+            ON CONFLICT(key) DO UPDATE SET payload = excluded.payload, fetched_at = excluded.fetched_at`,
+      args: [JSON.stringify(entry.data), new Date(entry.at).toISOString()],
+    });
+  } catch {
+    // Persistence is best-effort; the in-memory cache already served the request.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shelves snapshot
+// ---------------------------------------------------------------------------
+
+async function buildSnapshot(): Promise<DiscoveryResult> {
   const since = sevenDaysAgo();
 
-  const freshSets = await Promise.all(
-    FRESH_QUERIES(since).map((q) =>
-      searchRepos(q, "updated", 10).catch((e: Error) => {
-        errors.push(e.message);
-        return [] as DiscoveredRepo[];
-      })
-    )
+  const freshResults = await Promise.allSettled(
+    FRESH_QUERIES(since).map((q) => searchRepos(q, "updated", 10))
   );
-  const seen = new Set<string>();
-  const fresh = freshSets
-    .flat()
-    .filter((r) => (seen.has(r.fullName) ? false : (seen.add(r.fullName), true)))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 12);
+  const freshFailed = freshResults.every((r) => r.status === "rejected");
+  const fresh = await verifySkillFiles(
+    mergeDedupe(
+      freshResults.map((r) => (r.status === "fulfilled" ? r.value : []))
+    )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 12)
+  );
 
-  const topByCategory = await Promise.all(
-    CATEGORY_QUERIES.map(async ({ category, query }) => ({
-      category,
-      query,
-      repos: await searchRepos(query, "stars", 6).catch((e: Error) => {
-        errors.push(e.message);
-        return [] as DiscoveredRepo[];
-      }),
-    }))
+  const topByCategory: CategoryShelf[] = await Promise.all(
+    CATEGORY_QUERIES.map(async ({ category, queries }) => {
+      const results = await Promise.allSettled(
+        queries.map((q) => searchRepos(q, "stars", 8))
+      );
+      const merged = mergeDedupe(
+        results.map((r) => (r.status === "fulfilled" ? r.value : []))
+      )
+        .sort((a, b) => b.stars - a.stars)
+        .slice(0, 8);
+      return {
+        category,
+        repos: await verifySkillFiles(merged),
+        failed: results.every((r) => r.status === "rejected"),
+      };
+    })
   );
 
   return {
     refreshedAt: new Date().toISOString(),
     cache: "miss",
     fresh,
+    freshFailed,
     topByCategory,
-    errors,
   };
+}
+
+function snapshotEmpty(d: DiscoveryResult): boolean {
+  return d.fresh.length === 0 && d.topByCategory.every((c) => c.repos.length === 0);
 }
 
 export async function getDiscovery(): Promise<DiscoveryResult> {
   const now = Date.now();
-  if (cache && now - cache.at < DISCOVERY_CACHE_TTL_MS) {
-    return { ...cache.data, cache: "hit" };
+  if (memSnapshot && now - memSnapshot.at < DISCOVERY_CACHE_TTL_MS) {
+    return { ...memSnapshot.data, cache: "hit" };
   }
-  try {
-    const data = await buildDiscovery();
-    // Empty across the board means GitHub is unreachable or limiting us;
-    // keep serving the previous snapshot rather than caching a blank page.
-    const empty = data.fresh.length === 0 && data.topByCategory.every((c) => c.repos.length === 0);
-    if (empty && cache) return { ...cache.data, cache: "stale", errors: data.errors };
-    if (!empty) cache = { at: now, data };
+  // Cold start: try the persisted snapshot before spending GitHub quota.
+  if (!memSnapshot) {
+    const persisted = await loadPersistedSnapshot();
+    if (persisted && now - persisted.at < DISCOVERY_CACHE_TTL_MS) {
+      memSnapshot = persisted;
+      return { ...persisted.data, cache: "hit" };
+    }
+  }
+  const data = await buildSnapshot();
+  if (snapshotEmpty(data)) {
+    // GitHub unreachable or limiting us: keep serving the last good snapshot.
+    const fallback = memSnapshot ?? (await loadPersistedSnapshot());
+    if (fallback) return { ...fallback.data, cache: "stale" };
     return data;
-  } catch (e) {
-    if (cache) return { ...cache.data, cache: "stale", errors: [(e as Error).message] };
-    return {
-      refreshedAt: new Date().toISOString(),
-      cache: "miss",
-      fresh: [],
-      topByCategory: CATEGORY_QUERIES.map((c) => ({ ...c, repos: [] })),
-      errors: [(e as Error).message],
-    };
   }
+  const entry = { at: now, data };
+  memSnapshot = entry;
+  await persistSnapshot(entry);
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// User-query search
+// ---------------------------------------------------------------------------
+
+export async function searchDiscovery(rawQ: string): Promise<DiscoverySearchResult> {
+  const q = rawQ.trim().slice(0, 120);
+  const now = Date.now();
+  if (!q) return { q, refreshedAt: new Date(now).toISOString(), repos: [], failed: false };
+
+  const key = q.toLowerCase();
+  const hit = memQueryCache.get(key);
+  if (hit && now - hit.at < DISCOVERY_CACHE_TTL_MS) return hit.data;
+
+  const results = await Promise.allSettled(
+    USER_QUERY_WRAPPERS(q).map((wrapped) => searchRepos(wrapped, undefined, 10))
+  );
+  const failed = results.every((r) => r.status === "rejected");
+  const firstError =
+    results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
+
+  if (failed && hit) return { ...hit.data, refreshedAt: hit.data.refreshedAt };
+
+  const repos = await verifySkillFiles(
+    mergeDedupe(results.map((r) => (r.status === "fulfilled" ? r.value : [])))
+      .sort((a, b) => b.stars - a.stars)
+      .slice(0, 12)
+  );
+  const data: DiscoverySearchResult = {
+    q,
+    refreshedAt: new Date(now).toISOString(),
+    repos,
+    failed,
+    error: failed ? firstError?.reason?.message ?? "GitHub search failed" : undefined,
+  };
+  if (!failed) memQueryCache.set(key, { at: now, data });
+  return data;
 }
