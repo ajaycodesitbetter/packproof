@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -100,18 +99,21 @@ export default async function DiscoverPage({
         {q && (
           <div className="catrow">
             <span className="catlbl">Scope</span>
-            <Link
+            {/* Plain anchors, not client-side Link: this page is force-dynamic,
+                so router navigation can silently drop the first click. Native
+                navigation always works and keeps the URL shareable. */}
+            <a
               className={`chip${scope === "skills" ? " on" : ""}`}
               href={`/discover?q=${encodeURIComponent(q)}`}
             >
               Skill repos
-            </Link>
-            <Link
+            </a>
+            <a
               className={`chip${scope === "all" ? " on" : ""}`}
               href={`/discover?q=${encodeURIComponent(q)}&scope=all`}
             >
               All of GitHub
-            </Link>
+            </a>
           </div>
         )}
 
