@@ -43,9 +43,9 @@ export default function Home() {
           </div>
         </section>
         <div className="agent-row">
-          <span className="cell lbl">Your agent</span>
-          {AGENTS.map((a, i) => (
-            <span key={a} className={`cell${i === 0 ? " on" : ""}`}>{a}</span>
+          <span className="cell lbl">Works with</span>
+          {AGENTS.map((a) => (
+            <span key={a} className="cell">{a}</span>
           ))}
         </div>
         <div className="catrow" id="categories">

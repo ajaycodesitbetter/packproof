@@ -28,7 +28,7 @@ export default function SaveButton({ slug }: { slug: string }) {
   }, [session, slug]);
 
   const toggle = async () => {
-    if (!session) return signIn("github");
+    if (!session) return signIn();
     setBusy(true);
     setError(null);
     try {

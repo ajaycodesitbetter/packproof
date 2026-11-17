@@ -12,6 +12,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: { strategy: "jwt" },
   trustHost: true,
+  // Custom sign-in page: explains the identity-only scope before the OAuth
+  // jump instead of sending people straight to github.com.
+  pages: { signIn: "/signin" },
   callbacks: {
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;

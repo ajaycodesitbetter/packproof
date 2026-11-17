@@ -25,7 +25,9 @@ function Ticks({ ticks }: { ticks?: string[] }) {
     <span className="ticks">
       {ticks.map((t, i) =>
         t === "idle" ? (
-          <span key={i} className="idl">idle </span>
+          <span key={i} className="idl" title="correctly idle (pack not run)">
+            –
+          </span>
         ) : (
           <span key={i} className={t === "pass" ? "ok" : "no"}>
             {t === "pass" ? "✓" : "✗"}

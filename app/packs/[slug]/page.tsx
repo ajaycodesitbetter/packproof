@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import CopyButton from "@/components/CopyButton";
+import InstallCommand from "@/components/InstallCommand";
 import SaveButton from "@/components/SaveButton";
 import { Icon } from "@/components/Icons";
 import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
@@ -79,13 +79,12 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <a className="btn-dl" href={`/api/packs/${pack.slug}/download`}>
                 Download SKILL.md
               </a>
-              <CopyButton
-                text={`mkdir -p .packs/${pack.slug} && curl -sL "$SITE/api/packs/${pack.slug}/download" -o .packs/${pack.slug}/SKILL.md`}
-                label="copy install cmd"
-              />
               <span className="note">
                 pinned version · no account needed · drop the file in your agent&apos;s skills folder
               </span>
+              <InstallCommand
+                text={`mkdir -p .packs/${pack.slug} && curl -sL "$SITE/api/packs/${pack.slug}/download" -o .packs/${pack.slug}/SKILL.md`}
+              />
             </>
           ) : (
             <>

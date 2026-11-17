@@ -261,7 +261,7 @@ export const PACKS: Pack[] = [
   },
   {
     slug: "a11y-quick-scan",
-    name: "A11y Quick Scan",
+    name: "Accessibility Quick Scan",
     category: "UI/UX",
     version: "0.1.2",
     released: "2026-11-10",
