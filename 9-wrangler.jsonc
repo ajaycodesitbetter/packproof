@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "packproof",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "PACKPROOF_STORE": "d1"
+  },
+  "d1_databases": [
+    {
+      "binding": "LIBRARY_DB",
+      "database_name": "packproof-library",
+      "database_id": "844e3e51-94fe-4720-bd46-c90148c0d274"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "packproof-isolation-test",
+  "main": "test/isolation.worker.ts",
+  "compatibility_date": "2026-11-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "LIBRARY_DB",
+      "database_name": "packproof-library-test",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}
