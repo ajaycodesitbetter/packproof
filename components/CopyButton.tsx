@@ -9,11 +9,14 @@ export default function CopyButton({ text, label = "copy" }: { text: string; lab
     <button
       className="copybtn"
       onClick={async () => {
+        // $SITE is a placeholder the server component cannot resolve: the
+        // origin only exists in the browser, so substitute it at copy time.
+        const finalText = text.replaceAll("$SITE", window.location.origin);
         try {
-          await navigator.clipboard.writeText(text);
+          await navigator.clipboard.writeText(finalText);
         } catch {
           const ta = document.createElement("textarea");
-          ta.value = text;
+          ta.value = finalText;
           document.body.appendChild(ta);
           ta.select();
           document.execCommand("copy");

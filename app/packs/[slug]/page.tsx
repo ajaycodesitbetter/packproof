@@ -12,6 +12,16 @@ export function generateStaticParams() {
   return getAllPacks().map((p) => ({ slug: p.slug }));
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const pack = getPack(slug);
+  if (!pack) return {};
+  return {
+    title: `${pack.name} - PackProof`,
+    description: pack.tagline,
+  };
+}
+
 const VD_CLASS: Record<Verdict, string> = {
   improved: "imp",
   regression: "reg",

@@ -16,7 +16,7 @@ export default function Home() {
   ];
   return (
     <>
-      <Nav active="packs" />
+      <Nav />
       <main>
         <section className="hero-split">
           <div>

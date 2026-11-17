@@ -8,7 +8,15 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "sign in required" }, { status: 401 });
   }
-  const slugs = await getLibrary(session.user.id);
+  let slugs: string[];
+  try {
+    slugs = await getLibrary(session.user.id);
+  } catch {
+    // SaveButton already looks for this exact string to show its
+    // "library unavailable" state - a store failure must stay JSON,
+    // not become an unhandled 500 HTML error page.
+    return NextResponse.json({ error: "library unavailable" }, { status: 503 });
+  }
   return NextResponse.json({ slugs });
 }
 
@@ -34,6 +42,11 @@ export async function POST(req: NextRequest) {
   if (typeof saved !== "boolean") {
     return NextResponse.json({ error: "expected boolean 'saved'" }, { status: 400 });
   }
-  const slugs = await setInLibrary(session.user.id, slug, saved);
+  let slugs: string[];
+  try {
+    slugs = await setInLibrary(session.user.id, slug, saved);
+  } catch {
+    return NextResponse.json({ error: "library unavailable" }, { status: 503 });
+  }
   return NextResponse.json({ slugs, saved });
 }

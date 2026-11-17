@@ -1,7 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { getChangelog, fmtDate } from "@/lib/packs";
+
+export const metadata: Metadata = {
+  title: "Changelog - PackProof",
+  description: "Every tagged version of every pack, in one place.",
+};
 
 export default function ChangelogPage() {
   const entries = getChangelog();

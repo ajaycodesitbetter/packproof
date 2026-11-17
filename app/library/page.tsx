@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -7,6 +8,11 @@ import { getLibrary } from "@/lib/library";
 import { getPack } from "@/lib/packs";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "My packs - PackProof",
+  description: "Your saved packs, pinned to your GitHub sign-in.",
+};
 
 export default async function LibraryPage() {
   const session = await auth();
@@ -48,8 +54,8 @@ export default async function LibraryPage() {
           <section className="lib-notice">
             <span className="ln-stamp">Temporarily unavailable</span>
             <p>
-              Your saved packs are safe - the store that serves the library is not responding right now,
-              so they cannot be shown. Nothing has been lost.
+              The library isn&apos;t responding, so your saved packs can&apos;t be shown right now.
+              Please try again later.
             </p>
             <p className="ln-links">
               <a href="/library">Try again</a>

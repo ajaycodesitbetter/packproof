@@ -1,5 +1,12 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Methodology - PackProof",
+  description:
+    "The rules every release report follows: same tasks, same model, repetitions, regressions kept in the report.",
+};
 
 export default function MethodPage() {
   return (

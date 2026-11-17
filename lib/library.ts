@@ -43,11 +43,71 @@ function useLocalStore(): boolean {
   return true;
 }
 
+// Cloudflare deployment: D1 (SQLite) store, selected by the wrangler var.
+// One row per (user, pack) save, so writes are single-row atomic and
+// idempotent - no read-modify-write document and no CAS retry loop needed.
+function useD1Store(): boolean {
+  return process.env.PACKPROOF_STORE === "d1";
+}
+
+// Vercel (or any Node serverless) deployment: libSQL store (Turso), selected
+// by PACKPROOF_STORE=libsql. Same schema and same single-row atomic,
+// idempotent write model as the D1 path - migrations/0001_library.sql applies
+// unchanged. Turso Free is a hard-stop quota (queries fail with a BLOCKED
+// error past the allowance; it never bills the free plan automatically).
+function useLibSqlStore(): boolean {
+  return process.env.PACKPROOF_STORE === "libsql";
+}
+
+interface LibSqlLike {
+  execute(q: { sql: string; args: import("@libsql/client").InArgs }): Promise<{ rows: Array<Record<string, unknown>> }>;
+}
+
+let libsqlClient: Promise<LibSqlLike> | null = null;
+
+async function getLibSql(): Promise<LibSqlLike> {
+  if (libsqlClient) return libsqlClient;
+  const pending: Promise<LibSqlLike> = (async () => {
+    const url = process.env.TURSO_DATABASE_URL;
+    if (!url) throw new Error("PACKPROOF_STORE=libsql but TURSO_DATABASE_URL is not set");
+    // file: URLs are a local/testing convenience and need the Node entry
+    // (native libsql); remote Turso URLs use the fetch-only /web driver,
+    // which is what Turso documents for Vercel serverless.
+    const mod = url.startsWith("file:")
+      ? await import("@libsql/client")
+      : await import("@libsql/client/web");
+    return mod.createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  })();
+  libsqlClient = pending;
+  // Never cache a failed init: a bad env var fixed on the next deploy (or a
+  // transient import failure) must not poison every later request.
+  pending.catch(() => { if (libsqlClient === pending) libsqlClient = null; });
+  return pending;
+}
+
+interface D1Statement {
+  bind(...values: unknown[]): {
+    all<T = { slug: string }>(): Promise<{ results: T[] }>;
+    run(): Promise<unknown>;
+  };
+}
+interface D1Like {
+  prepare(query: string): D1Statement;
+}
+
+async function getD1(): Promise<D1Like> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const ctx = (await getCloudflareContext({ async: true })) as unknown as { env: Record<string, unknown> };
+  const db = ctx.env.LIBRARY_DB;
+  if (!db) throw new Error("PACKPROOF_STORE=d1 but no LIBRARY_DB binding is configured");
+  return db as D1Like;
+}
+
 function withTimeout<T>(p: Promise<T>, what: string): Promise<T> {
   return Promise.race([
     p,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Blobs ${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS)
+      setTimeout(() => reject(new Error(`${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS)
     ),
   ]);
 }
@@ -87,9 +147,25 @@ export async function getLibrary(userId: string): Promise<string[]> {
     const all = await readLocal();
     return all[userId] ?? [];
   }
+  if (useD1Store()) {
+    const db = await getD1();
+    const { results } = await withTimeout(
+      db.prepare("SELECT slug FROM library_saves WHERE user_id = ? ORDER BY slug").bind(userId).all(),
+      "d1 select"
+    );
+    return results.map((r) => r.slug);
+  }
+  if (useLibSqlStore()) {
+    const db = await getLibSql();
+    const res = await withTimeout(
+      db.execute({ sql: "SELECT slug FROM library_saves WHERE user_id = ? ORDER BY slug", args: [userId] }),
+      "libsql select"
+    );
+    return res.rows.map((r) => String(r.slug));
+  }
   const { getStore } = await import("@netlify/blobs");
   const store = getStore(STORE);
-  const slugs = await withTimeout(store.get(userId, { type: "json" }), "get");
+  const slugs = await withTimeout(store.get(userId, { type: "json" }), "Blobs get");
   return Array.isArray(slugs) ? (slugs as string[]) : [];
 }
 
@@ -106,10 +182,35 @@ export async function setInLibrary(userId: string, slug: string, saved: boolean)
     localQueue = run.catch(() => {});
     return run;
   }
+  if (useD1Store()) {
+    const db = await getD1();
+    // Atomic, idempotent single-row write: concurrent saves of different
+    // packs both land; duplicate saves converge; last unsave wins.
+    await withTimeout(
+      saved
+        ? db.prepare("INSERT OR IGNORE INTO library_saves (user_id, slug) VALUES (?, ?)").bind(userId, slug).run()
+        : db.prepare("DELETE FROM library_saves WHERE user_id = ? AND slug = ?").bind(userId, slug).run(),
+      "d1 write"
+    );
+    return getLibrary(userId);
+  }
+  if (useLibSqlStore()) {
+    const db = await getLibSql();
+    // Identical write model to the D1 path: single-row INSERT OR IGNORE /
+    // DELETE on the (user_id, slug) primary key - atomic and idempotent, so
+    // concurrent saves of different packs both land and duplicates converge.
+    await withTimeout(
+      saved
+        ? db.execute({ sql: "INSERT OR IGNORE INTO library_saves (user_id, slug) VALUES (?, ?)", args: [userId, slug] })
+        : db.execute({ sql: "DELETE FROM library_saves WHERE user_id = ? AND slug = ?", args: [userId, slug] }),
+      "libsql write"
+    );
+    return getLibrary(userId);
+  }
   const { getStore } = await import("@netlify/blobs");
   const store = getStore(STORE);
   for (let attempt = 1; attempt <= MAX_WRITE_ATTEMPTS; attempt++) {
-    const res = await withTimeout(store.getWithMetadata(userId, { type: "json" }), "getWithMetadata");
+    const res = await withTimeout(store.getWithMetadata(userId, { type: "json" }), "Blobs getWithMetadata");
     const current = Array.isArray(res?.data) ? (res.data as string[]) : [];
     const already = current.includes(slug);
     if (already === saved) {
@@ -124,7 +225,7 @@ export async function setInLibrary(userId: string, slug: string, saved: boolean)
       res?.etag
         ? store.setJSON(userId, next, { onlyIfMatch: res.etag })
         : store.setJSON(userId, next, { onlyIfNew: true }),
-      "setJSON"
+      "Blobs setJSON"
     );
     if (write.modified) return [...next].sort();
     // modified=false: another writer won the race - re-read and retry.

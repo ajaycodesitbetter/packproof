@@ -1,8 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PackCard from "@/components/PackCard";
-import { getAllPacks, getCategories, normalizeCategory, searchPacks } from "@/lib/packs";
+import { getAllPacks, getCategories, normalizeCategory, searchPacks, fmtDate } from "@/lib/packs";
+
+export const metadata: Metadata = {
+  title: "The registry - PackProof",
+  description:
+    "Every pack is a small workflow file for your coding agent, with pinned versions and published evidence. Concept stage: sample evidence.",
+};
 
 export default async function PacksPage({
   searchParams,
@@ -23,6 +30,9 @@ export default async function PacksPage({
 
   const cats = getCategories();
   const total = cats.reduce((n, c) => n + c.count, 0);
+  // Newest pack release in the registry data, not a hand-typed date that
+  // silently goes stale.
+  const lastUpdated = fmtDate(getAllPacks().map((p) => p.released).sort().at(-1)!);
 
   return (
     <>
@@ -37,7 +47,7 @@ export default async function PacksPage({
           <span className="ptape"></span>
           <h1>The registry</h1>
           <div className="ver">
-            {packs.length} of {total} packs · {q || cat ? "filtered" : "unfiltered"} · updated 14 Nov 2026
+            {packs.length} of {total} packs · {q || cat ? "filtered" : "unfiltered"} · updated {lastUpdated}
           </div>
           <p className="task">
             Every pack is a small workflow file for your coding agent. Statuses: sample report means the
@@ -47,7 +57,7 @@ export default async function PacksPage({
         <div className="toolbar">
           <form action="/packs" method="get">
             {cat && <input type="hidden" name="category" value={cat} />}
-            <input type="search" name="q" placeholder="Search packs, e.g. migration" defaultValue={q} aria-label="Search packs" />
+            <input type="search" name="q" placeholder="Filter the registry, e.g. migration" defaultValue={q} aria-label="Filter the registry" />
             <button type="submit">Search</button>
           </form>
         </div>

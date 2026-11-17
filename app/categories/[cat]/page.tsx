@@ -9,13 +9,27 @@ export function generateStaticParams() {
   return getCategories().map((c) => ({ cat: c.name }));
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ cat: string }> }) {
+  const { cat: rawCat } = await params;
+  const cat = normalizeCategory(decodeURIComponent(rawCat));
+  if (!cat) return {};
+  return {
+    title: `${cat} packs - PackProof`,
+    description: `Workflow packs in the ${cat} category. Concept stage: sample evidence.`,
+  };
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ cat: string }> }) {
   const { cat: rawCat } = await params;
   const decoded = decodeURIComponent(rawCat);
   const cat = normalizeCategory(decoded);
   if (!cat) notFound();
   const packs = getByCategory(cat);
-  const published = packs.filter((p) => p.published).length;
+  // Count the same sample-scoped status the card badges show (Sample report /
+  // Sample partial / In testing), so the header and the cards tell one story
+  // and staged evidence is never implied to be a completed real benchmark.
+  const complete = packs.filter((p) => p.status === "evidence-complete").length;
+  const partial = packs.filter((p) => p.status === "partial").length;
 
   return (
     <>
@@ -28,7 +42,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ cat: 
           <span className="ptape"></span>
           <h1>{cat}</h1>
           <div className="ver">
-            {packs.length} packs · {published} published · {packs.length - published} in testing
+            {packs.length} packs · {complete} sample report{complete === 1 ? "" : "s"}
+            {partial > 0 ? ` · ${partial} sample partial` : ""} · {packs.length - complete - partial} in testing
           </div>
           <p className="task">
             {cat === "Backend" &&
