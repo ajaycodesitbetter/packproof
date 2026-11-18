@@ -81,7 +81,7 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
 
         <div className="grid2">
           <div className="callout" style={{ marginTop: 0 }}>
-            <b>Kept failures</b> - {e.keptFailures}
+            <b>Staged example scenario</b> - {e.keptFailures}
           </div>
           <div className="card" style={{ marginTop: 0 }}>
             <h2>How to reproduce</h2>

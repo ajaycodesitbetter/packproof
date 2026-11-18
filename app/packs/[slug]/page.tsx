@@ -99,7 +99,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
 
         {e && (
           <div className="stats" style={{ position: "relative" }}>
-          <span className="sample-stamp">Sample data</span>
+          <span className="sample-stamp" style={{ top: -14, right: 6 }}>Sample data</span>
             <div className="stat">
               <div className="v">{e.runs}</div>
               <div className="l">sample rows - not real evaluation results</div>
@@ -113,7 +113,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <div className="l">reps per cell, staged</div>
             </div>
             <div className="stat">
-              <div className="v">{STATUS_LABEL[pack.status]}</div>
+              <div className="v txt">{STATUS_LABEL[pack.status]}</div>
               <div className="l">evidence status</div>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
 
         {e?.keptFailures && (
           <div className="callout">
-            <b>{pack.status === "partial" ? "Status" : "Staged sample note"}</b> - {e.keptFailures}
+            <b>{pack.status === "partial" ? "Status" : "Staged example scenario"}</b> - {e.keptFailures}
           </div>
         )}
         {!e && pack.reportDue && (
