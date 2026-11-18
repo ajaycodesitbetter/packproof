@@ -8,7 +8,7 @@ import { Icon } from "./Icons";
 // own filter form on /packs, labeled as such. The pending feedback on
 // submit (kbd swaps to "Searching", input turns readOnly, restored on
 // bfcache) is handled by the delegated script in app/layout.tsx.
-export default function SearchBox() {
+export default function SearchBox({ defaultQuery = "" }: { defaultQuery?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,14 +39,17 @@ export default function SearchBox() {
           ref={inputRef}
           type="search"
           name="q"
-          placeholder="Search GitHub skill repos"
+          defaultValue={defaultQuery}
+          enterKeyHint="search"
+          placeholder="Search skill repos"
           aria-label="Search GitHub skill repos"
         />
-        <kbd>/</kbd>
+        <button className="nav-search-submit" type="submit" aria-label="Search GitHub skill repos" title="Search (Enter)">Go</button>
         <span className="search-pending" role="status" hidden>
           Searching<span className="loading-dots" aria-hidden="true" />
         </span>
       </div>
+      <span className="search-hint" aria-hidden="true">Press / to focus · Enter to search</span>
     </form>
   );
 }

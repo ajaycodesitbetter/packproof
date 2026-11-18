@@ -11,8 +11,8 @@ export default function Home() {
   const total = cats.reduce((n, c) => n + c.count, 0);
   const steps = [
     { t: "Pick a task", d: "Workflow packs across research, UI/UX and backend." },
-    { t: "Install the file", d: "Download the pack file, drop it in your agent's skills folder - pinned version, no surprises." },
-    { t: "Read the proof", d: "Before/after runs and the failures, published with every release." },
+    { t: "Inspect the file", d: "Read the instructions and requirements before adding them to your agent." },
+    { t: "Check the evidence", d: "Sample reports are marked. No real benchmark results are claimed yet." },
   ];
   return (
     <>
@@ -32,18 +32,22 @@ export default function Home() {
           <div className="hero-right">
             <span className="tape1"></span>
             <p className="sub">
-              Small workflow packs for your coding agent. The deal: every release ships{" "}
-              <b>pinned versions, before-and-after runs, and the failures</b> - so you can check
-              the proof before anything touches your project.
+              Useful workflows for your agent, with <b>the source, the setup, and the limits</b>
+              {" "}in one place. Find a starting point. Check it before it touches your project.
             </p>
             <div className="cta-row">
-              <Link className="btn b1" href="/packs">Browse packs</Link>
-              <Link className="btn b2" href="/method">Methodology</Link>
+              <Link className="btn b1" href="/skills">Find a skill</Link>
+              <Link className="btn b2" href="/packs">PackProof packs</Link>
             </div>
           </div>
         </section>
+        <section className="home-task-paths" aria-label="Start with a task">
+          <Link href="/skills?task=Code%20%26%20testing"><span className="path-graphic code-path" aria-hidden="true">+ test<br />- guess</span><b>Ship better code</b><small>Reviews, tests & debugging</small><span aria-hidden="true">→</span></Link>
+          <Link href="/skills?task=Design%20%26%20UI"><span className="path-graphic design-path" aria-hidden="true"><i /><i /><i /></span><b>Make it feel right</b><small>Interfaces & visual details</small><span aria-hidden="true">→</span></Link>
+          <Link href="/skills?task=Video%20%26%20motion"><span className="path-graphic video-path" aria-hidden="true">▶<i /><i /></span><b>Tell it in motion</b><small>Video, captions & media</small><span aria-hidden="true">→</span></Link>
+        </section>
         <div className="agent-row">
-          <span className="cell lbl">Works with</span>
+          <span className="cell lbl">SKILL.md workflows</span>
           {AGENTS.map((a) => (
             <span key={a} className="cell">{a}</span>
           ))}

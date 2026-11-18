@@ -48,7 +48,7 @@ export const PACKS: Pack[] = [
       keptFailures:
         "deprecate-route regressed: with the pack, 2 of 3 runs missed the docs update. Kept in the report, not hidden - fix planned for v0.3.2. Legacy DELETE 500 stays documented, not fixed. Run 14 timeout was a flake; the rerun passed.",
       reproduce:
-        "Pinned in this report (sample values): seed pp034-20261112, model claude-sonnet-4.6, task-repo snapshot pp-tasks-2026-11-12. Environment notes and raw logs are attached to the release.",
+        "Pinned in this report (sample values): seed pp034-20261112, model claude-sonnet-4.6, task-repo snapshot pp-tasks-2026-11-12. Illustrative identifiers only: no task repository, environment record or raw logs exist for this sample.",
     },
     changelog: [
       { version: "0.3.1", date: "2026-11-12", note: "Fixes the header case mismatch" },
@@ -99,7 +99,7 @@ export const PACKS: Pack[] = [
         { task: "leaky-abstraction", baseSolved: 1, packSolved: null, reps: 3, verdict: "pending" },
       ],
       keptFailures:
-        "Baseline half done: 9/18 tasks solved without the pack. With-pack runs are still in progress - nothing is claimed until all 36 runs are on record.",
+        "Illustrative partial report: the staged baseline shows 9/18. No real baseline or with-pack runs have been performed.",
       reproduce:
         "Same repo snapshot and task set as the baseline half. The with-pack half uses the pinned v0.1.2 file.",
     },
@@ -137,7 +137,7 @@ export const PACKS: Pack[] = [
       "Does not redesign anything",
       "Does not rate taste - only consistency, states and dead ends",
     ],
-    reportDue: "Sample plan: pilot tasks queued",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "research-brief",
@@ -163,7 +163,7 @@ export const PACKS: Pack[] = [
       "Does not answer without sources",
       "Does not hide low-confidence claims in the prose",
     ],
-    reportDue: "Sample plan: report due 20 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "migration-dry-run",
@@ -180,7 +180,7 @@ export const PACKS: Pack[] = [
       "Runs a schema migration against a throwaway copy of the data and reports what would break - locks, rewrites, dropped indexes - before the real migration window.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-08", note: "First tagged version" }],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "flaky-test-hunter",
@@ -200,7 +200,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.1", date: "2026-11-05", note: "Separates order-dependence from time-dependence" },
       { version: "0.1.0", date: "2026-10-30", note: "First tagged version" },
     ],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "env-config-doctor",
@@ -220,7 +220,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.3", date: "2026-11-11", note: "Shape checks for URLs and ports" },
       { version: "0.0.2", date: "2026-11-03", note: "First draft" },
     ],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "empty-state-audit",
@@ -237,7 +237,7 @@ export const PACKS: Pack[] = [
       "Finds screens that render blank or broken with zero data - fresh accounts, cleared carts, first-run lists - and drafts an empty state for each: what it says, what it offers, what it never shows.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-07", note: "First tagged version" }],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "copy-tone-pass",
@@ -257,7 +257,7 @@ export const PACKS: Pack[] = [
       { version: "0.0.2", date: "2026-11-12", note: "Rewrite suggestions cite the rule they follow" },
       { version: "0.0.1", date: "2026-11-09", note: "First draft" },
     ],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "a11y-quick-scan",
@@ -277,7 +277,7 @@ export const PACKS: Pack[] = [
       { version: "0.1.2", date: "2026-11-10", note: "Ranks fixes by users blocked" },
       { version: "0.1.0", date: "2026-11-01", note: "First tagged version" },
     ],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "competitor-scan",
@@ -294,7 +294,7 @@ export const PACKS: Pack[] = [
       "Builds a feature and pricing comparison of the competitors you name, from public sources only. Every cell carries its source and its retrieval date, and unknown cells stay unknown.",
     agents: AGENTS,
     changelog: [{ version: "0.1.0", date: "2026-11-06", note: "First tagged version" }],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
   {
     slug: "paper-trail",
@@ -311,6 +311,6 @@ export const PACKS: Pack[] = [
       "Traces a claim back through its citation chain to the primary source and rates each hop - primary, secondary, blog-of-a-blog - so you can see where the chain goes soft.",
     agents: AGENTS,
     changelog: [{ version: "0.0.1", date: "2026-11-13", note: "First draft" }],
-    reportDue: "Sample plan: report due 22 Nov",
+    reportDue: "No evaluation results yet",
   },
 ];

@@ -29,7 +29,7 @@ function shape(p: ReturnType<typeof getAllPacks>[number]) {
       : null,
     links: {
       pack: `/packs/${p.slug}`,
-      download: p.published ? `/api/packs/${p.slug}/download` : null,
+      download: p.published ? `/api/packs/${p.slug}/download?version=${encodeURIComponent(p.version)}` : null,
       report:
         p.status === "evidence-complete" ? `/reports/${p.slug}` : null,
     },

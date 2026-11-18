@@ -2,11 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import InstallCommand from "@/components/InstallCommand";
+import PackInstall from "@/components/PackInstall";
 import SaveButton from "@/components/SaveButton";
 import { Icon } from "@/components/Icons";
 import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
 import { STATUS_LABEL, VERDICT_LABEL, Verdict } from "@/lib/types";
+
+// Only registry slugs exist; reject unknown routes before streaming a 200 shell.
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return getAllPacks().map((p) => ({ slug: p.slug }));
@@ -76,15 +79,13 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
           {pack.published ? (
             <>
               <span className="cmd">{pack.slug} v{pack.version}</span>
-              <a className="btn-dl" href={`/api/packs/${pack.slug}/download`}>
+              <a className="btn-dl" href={`/api/packs/${pack.slug}/download?version=${encodeURIComponent(pack.version)}`}>
                 Download SKILL.md
               </a>
               <span className="note">
-                pinned version · no account needed · drop the file in your agent&apos;s skills folder
+                version-checked download · no account needed · inspect before adding
               </span>
-              <InstallCommand
-                text={`mkdir -p .packs/${pack.slug} && curl -sL "$SITE/api/packs/${pack.slug}/download" -o .packs/${pack.slug}/SKILL.md`}
-              />
+              <PackInstall slug={pack.slug} version={pack.version} />
             </>
           ) : (
             <>
@@ -115,7 +116,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <div className="l">
                 {e.packSolved !== null
                   ? `with pack (${pct(attemptedSolved(e), attemptedTotal(e))}% of attempted · ${idleRunCount(e)} correctly idle)`
-                  : "with pack - in progress"}
+                  : "with pack - no sample data"}
               </div>
             </div>
             <div className="stat">

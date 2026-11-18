@@ -356,6 +356,34 @@ export class DiscoveryService {
     private clock: () => number = Date.now
   ) {}
 
+  // Fail closed when shared coordination is unavailable. Never replace a
+  // failed global quota claim with a permissive per-process ledger.
+  async getDiscovery(): Promise<DiscoveryResult> {
+    try { return await this.loadDiscovery(); }
+    catch {
+      console.error(JSON.stringify({ event: "discovery_unavailable", operation: "snapshot" }));
+      if (this.memSnapshot) return { ...this.memSnapshot.data, cache: "stale" };
+      return {
+        refreshedAt: new Date(this.clock()).toISOString(), cache: "miss",
+        fresh: [], freshFailed: true, freshNotable: [], freshNotableFailed: true,
+        topByCategory: CATEGORY_QUERIES.map(c => ({ category: c.category, repos: [], failed: true })),
+      };
+    }
+  }
+
+  async searchDiscovery(rawQ: string, rawScope?: string): Promise<DiscoverySearchResult> {
+    try { return await this.loadSearch(rawQ, rawScope); }
+    catch {
+      console.error(JSON.stringify({ event: "discovery_unavailable", operation: "search" }));
+      const q = rawQ.trim().slice(0, 120);
+      const scope = rawScope === "all" ? "all" as const : "skills" as const;
+      const cached = this.memQueryCache.get(`${scope}:${q.toLowerCase()}`);
+      if (cached) return { ...cached.data };
+      return { q, scope, refreshedAt: new Date(this.clock()).toISOString(), repos: [], failed: true,
+        error: "Discovery is temporarily unavailable. Please try again later." };
+    }
+  }
+
   private singleflight<T>(key: string, fn: () => Promise<T>): Promise<T> {
     const existing = this.inflight.get(key);
     if (existing) return existing as Promise<T>;
@@ -480,7 +508,7 @@ export class DiscoveryService {
     return { complete: false, data: partial };
   }
 
-  async getDiscovery(): Promise<DiscoveryResult> {
+  private async loadDiscovery(): Promise<DiscoveryResult> {
     const now = this.clock();
     if (this.memSnapshot && now - this.memSnapshot.at < ttlMs()) {
       return { ...this.memSnapshot.data, cache: "hit" };
@@ -529,7 +557,7 @@ export class DiscoveryService {
     });
   }
 
-  async searchDiscovery(rawQ: string, rawScope?: string): Promise<DiscoverySearchResult> {
+  private async loadSearch(rawQ: string, rawScope?: string): Promise<DiscoverySearchResult> {
     const q = rawQ.trim().slice(0, 120);
     const scope: "skills" | "all" = rawScope === "all" ? "all" : "skills";
     const now = this.clock();

@@ -5,6 +5,9 @@ import Footer from "@/components/Footer";
 import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
 import { VERDICT_LABEL, Verdict } from "@/lib/types";
 
+// Only registry slugs exist; reject unknown routes before streaming a 200 shell.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return getAllPacks()
     .filter((p) => p.evidence && p.status === "evidence-complete")

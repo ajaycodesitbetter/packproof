@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Methodology - PackProof",
   description:
-    "The rules every release report follows: same tasks, same model, repetitions, regressions kept in the report.",
+    "The intended benchmark protocol - not yet executed: same tasks, same model, repetitions, regressions kept in the report.",
 };
 
 export default function MethodPage() {
@@ -19,7 +19,7 @@ export default function MethodPage() {
         <section className="phead">
           <span className="ptape"></span>
           <h1>How a pack earns its proof</h1>
-          <div className="ver">The rules every release report follows</div>
+          <div className="ver">The intended benchmark protocol - not yet executed</div>
         </section>
         <div className="prose">
           <h2>
@@ -58,14 +58,16 @@ export default function MethodPage() {
           </h2>
           <p>
             A pack is a small workflow document your agent reads - rules, order of operations, hard
-            boundaries. It is not a plugin, not a binary, and it never runs code on your machine.
-            Installing is downloading one file into your agent&apos;s skills folder; removing is
-            deleting it.
+            boundaries. It is not a plugin or binary. The document itself does not execute code,
+            but your agent may run commands, edit files or use network tools while following it.
+            Review the document and your agent&apos;s permissions before use. Downloading to .packs
+            stores the file in this repo; it does not automatically register it with every agent.
+            Add it to your agent&apos;s supported skill location or explicitly ask the agent to read it.
           </p>
           <ul>
-            <li>Reads your repo and the diff you ask about</li>
-            <li>Writes only inside the pack&apos;s own folder</li>
-            <li>No account, no telemetry, no network at run time</li>
+            <li>PackProof downloads need no account; saving to a library uses GitHub sign-in.</li>
+            <li>Agent file and network access follow your agent&apos;s permissions, not this website.</li>
+            <li>External GitHub repos are unreviewed third-party content. Inspect them before use.</li>
           </ul>
           <p style={{ marginTop: 22 }}>
             <em>

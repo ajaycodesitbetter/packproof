@@ -107,9 +107,9 @@ export class LibSqlCoordStore implements CoordStore {
   constructor(private getClient: () => Promise<LibSqlLike>) {}
 
   private async ensureRow(db: LibSqlLike): Promise<void> {
-    // Tolerates a missing table (migration 0003 not applied yet): every
-    // method falls back to permissive in-memory-ish behavior via catch in
-    // the caller's layer, but we try to create the row when possible.
+    // Migration 0003 must create the table. Missing schema rejects the
+    // operation; the service returns a redacted failure without spending
+    // upstream quota or switching to a permissive process-local ledger.
     await db.execute({
       sql: `INSERT OR IGNORE INTO discovery_coord
             (id, window_bucket, window_calls, lease_until, lease_owner, progress_next, progress_payload)

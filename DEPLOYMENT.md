@@ -1,85 +1,59 @@
-# PackProof deployment readiness (Vercel + Turso Free path)
+# Deployment and release checks
 
-Status: source is ready for a standard Next.js deploy. No production deploy
-has been run from this branch. The steps below are the exact remaining
-execution decisions and actions, in order.
+Updated 17 November 2026. This document describes the prepared source and release process, not approval to publish it.
 
-## 1. Get this branch onto GitHub (user action)
+## Current route
 
-The public repo's `main` is preserved untouched in history. Push the
-`reconcile-v3` branch from a real git client (local clone of the delivered
-bundle, or a scoped personal access token). Do NOT use the GitHub web upload
-(it caused the numeric-prefix file defect) or github.dev (OAuth flow failed
-in the cloud browser). No force-push is needed: `reconcile-v3` builds on top
-of the current remote `main`.
+The current application runs on Vercel with a Turso/libSQL store. The canonical owner domain is https://packproof.ajaymathuriya.com/. The alias https://packproof-three.vercel.app/ serves the same deployment. The deleted Netlify copy must not be recreated.
 
-## 2. Accounts the user must create/own (not creatable by an agent)
+The readiness changes prepared locally have not been pushed or deployed. The owner must first choose the GitHub-to-Vercel deployment route: retain automatic deployments or use a manual route. Do not push while that decision is open, because a push may publish the work. Do not change that account setting without approval.
 
-- **Vercel** (Hobby, $0): import the GitHub repo. Hobby is free with no
-  per-request CPU-ms cap (the Cloudflare Free blocker does not exist here).
-  DECISION STILL OPEN: Hobby terms' commercial-use suitability if PackProof
-  ever launches commercially - revisit at launch intent, not now.
-- **Turso** (Free, $0, no card): one database. Free allowance (verified
-  against turso.tech/pricing + docs, Nov 2026): 100 databases, 5GB storage,
-  500M rows read/month, 10M rows written/month. Hard-stop behavior: past any
-  single limit, queries fail with a BLOCKED error until upgrade - the free
-  plan can never bill automatically (overages exist only on paid plans and
-  are disabled by default). This workload (single-row saves/unsaves) is
-  trivially inside the allowance.
+## Runtime configuration
 
-## 3. Apply the schema (one command after the Turso database exists)
+Required for the current Node/serverless route:
 
-The same migrations used for D1 apply unchanged:
+- `PACKPROOF_STORE=libsql`
+- `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`
+- `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` and `AUTH_SECRET`
 
-    turso db shell <database-name> < migrations/0001_library.sql
-    turso db shell <database-name> < migrations/0002_discovery_cache.sql
+Keep values in the hosting provider's secret environment settings. Do not place credentials in screenshots, logs, source archives or `.env` files committed to Git.
 
-The second table lets the /discover page's GitHub snapshot survive serverless
-cold starts (last-good cache across instances). Optional: PACKPROOF_GITHUB_TOKEN
-raises the GitHub search allowance for /discover from 10 to 30 req/min -
-read-only public search only, off by default, attach only with the user's
-approval.
+The GitHub OAuth app uses identity-only access, not repository-write access. Its callback must match the chosen site at `/api/auth/callback/github`. Changes to that app or its permissions require owner approval. Do not widen access to make a release easier.
 
-## 4. Environment variables for the Vercel project
+`PACKPROOF_GITHUB_TOKEN` is optional for public GitHub discovery. An additional credential or grant is not a release prerequisite; request approval before adding one. Discovery cache and concurrency settings are configurable through the `PACKPROOF_DISCOVERY_*` variables in `lib/discovery.ts`.
 
-- `PACKPROOF_STORE=libsql` - selects the Turso backend
-- `TURSO_DATABASE_URL` - from Turso (libsql://...)
-- `TURSO_AUTH_TOKEN` - from Turso
-- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` - GitHub OAuth app credentials
-- `AUTH_SECRET` - NextAuth session secret (openssl rand -base64 32)
+The current schema is in `migrations/0001_library.sql`, `migrations/0002_discovery_cache.sql`, and `migrations/0003_discovery_coord.sql`. For an existing database, inspect the schema and migration state before applying anything. Back up data and establish a recovery path before any destructive migration. This release does not require a new database or a destructive migration.
 
-The GitHub OAuth app's callback URL must be updated to the Vercel domain
-(https://<site>/api/auth/callback/github) or sign-in will fail. The existing
-OAuth app can be edited; no new grant types are needed (identity-only
-scopes: read:user, user:email).
+## Cost and terms
 
-## 5. What is already verified (do not re-litigate)
+No paid plan, upgrade or new service has been approved. Provider limits and terms can change. Do not treat historical quota numbers in older notes or comments as the current contract.
 
-- tsc clean; next build clean; all 12 pack pages and 7 API routes build.
-- Library store correctness, proven locally on BOTH the D1 path (wrangler
-  dev --local) and the new libSQL path (@libsql/client 0.18.0 against a
-  local file database): identity isolation, independent same-slug saves,
-  unsave isolation, 5 concurrent duplicate saves -> 1 row, 10 parallel
-  distinct saves -> 10 rows, injection-shaped user id -> empty result.
-- Session identity boundary: /api/library takes identity ONLY from the
-  NextAuth JWT session (token.sub -> session.user.id); the request body is
-  used for {slug, saved} only, and slug is validated against the registry.
-  401 when signed out. A live second-GitHub-account OAuth test is still
-  undone - it needs a real second identity at deploy time, not before.
+Official pages checked 17 Nov 2026:
 
-## 6. What must NOT be claimed
+- https://vercel.com/docs/plans/hobby
+- https://turso.tech/pricing
 
-- Benchmark numbers in the registry are staged sample data (labeled
-  sample_data in the API and on pages). Of 12 published packs, evidence is
-  complete for 1, partial for 1, in testing for 10. Do not present the packs
-  as benchmark-validated until real evidence runs exist.
+Vercel describes Hobby as a free tier with finite usage and pauses after limits. Commercial-use suitability must be checked against the current terms and the owner's intended use before a commercial launch. The fetched plan page did not itself settle that question. Turso's current pricing must be checked alongside the actual account plan and settings; a public pricing page does not prove the account's spending configuration. No promise of unlimited traffic or automatically free scaling is made here.
 
-## 7. Other backends remain intact
+## Acceptance and release sequence
 
-- D1 (Cloudflare Workers): code and config preserved; runtime ruled out on
-  Workers Free (measured 25.65ms median CPU vs 10ms cap). D1 database and
-  its 1 test row are untouched.
-- Netlify Blobs: code preserved; Netlify deploy resumes after its quota
-  resets Nov 21, but its GitHub-linked runtime historically hung Blobs
-  calls. Fallback only.
-- Local file store: dev-only, production-gated.
+1. Run the commands in README using a local production build. Keep test output and screenshots.
+2. Confirm the final source diff, canonical domain, intended deployment method and owner publication approval.
+3. Preserve an owner-only source archive and exact patch without secrets or dependency directories.
+4. Publish only through the chosen route. Record the revision and deploy URL. Do not recreate Netlify or alter unrelated accounts.
+5. Re-run the read-only HTTP checks against the deployed revision. Verify unknown pack/report paths return HTTP 404, version mismatch returns 409, downloads identify the requested version, and signed-out library requests return 401.
+6. Inspect actual mobile and desktop pixels, including the install command, field guide filters, expanded card details and sample-report labels.
+7. Check GitHub sign-in and save/unsave under the owner's approved test scope. Verify a second real identity independently before claiming live cross-account isolation. Local SQL isolation tests are not that check.
+8. Reconfirm deployment health and rollback target. A successful build is not production acceptance.
+
+## Evidence and remaining limits
+
+The prepared release passed a production build, 78 read-only HTTP checks, 84 browser assertions at 320/390/768/1440 widths, 38 discovery tests, 14 libSQL-store tests, 13 safe-return checks and the search-route contract. These are dated local results, not live release results. The production-only dependency scan reports zero advisories; the full development tree has 10 findings (8 high, 2 moderate) through the preserved Cloudflare/OpenNext adapter. The suggested automatic remediation changes the adapter major version, so this has not been applied without adapter compatibility testing. The current Vercel build does not invoke that adapter. Do not describe the entire dependency tree as security-clean. The browser suite uses an existing local Chrome executable.
+
+The public registry's reports remain staged samples. The separate six-call exploratory pilot is not a replacement for real task repositories, repeated baselines, installed-agent trials, raw tool traces and independently reviewable scoring.
+
+Production observability, an owner-selected backup/restore and retention policy, dependency maintenance cadence, upstream link freshness checks, abuse/load testing and real multi-identity release acceptance still need operating decisions or additional evidence. Nothing in this document implies those are already complete.
+
+## Preserved alternatives
+
+Legacy Cloudflare D1, Netlify Blobs and local-file adapters remain in source for historical compatibility. They are not validated fallback deployments for this release. The local-file adapter is for isolated development/testing, never a shared production data store. Switching runtimes is a separate compatibility and authorization task.

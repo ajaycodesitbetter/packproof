@@ -22,7 +22,7 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PackProof - skill packs with published proof",
   description:
-    "Small workflow packs for your coding agent. Every release ships pinned versions, before-and-after runs, and the failures.",
+    "Find agent workflows by task, inspect their sources and setup, and see clear evidence limits. PackProof benchmark reports are staged samples.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

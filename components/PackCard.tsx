@@ -7,12 +7,12 @@ function runsLabel(p: Pack): string {
   if (!p.evidence) return p.reportDue ?? "In testing";
   const e = p.evidence;
   if (e.packSolved === null)
-    return `${e.baseTotal} of ${e.runs} runs done · with-pack run in progress · SAMPLE`;
+    return `${e.baseTotal} of ${e.runs} sample baseline rows · with-pack data absent · SAMPLE`;
   return `${e.runs} runs · ${e.improved} improved · ${e.regressions} regression${e.regressions === 1 ? "" : "s"} · SAMPLE`;
 }
 
 function packScoreLabel(e: NonNullable<Pack["evidence"]>): string {
-  if (e.packSolved === null) return "PACK run pending";
+  if (e.packSolved === null) return "PACK not measured";
   const s = attemptedSolved(e);
   const t = attemptedTotal(e);
   return s === e.packSolved && t === e.packTotal
