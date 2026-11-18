@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PackInstall from "@/components/PackInstall";
+import SkillPreview from "@/components/SkillPreview";
+import { AGENT_GUIDES, AGENT_IDS, FIT_LABEL } from "@/lib/agents";
 import SaveButton from "@/components/SaveButton";
 import { Icon } from "@/components/Icons";
 import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
@@ -65,7 +67,10 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
             <div className={`ph-side st-${st}`}>
               <span className="status big">{STATUS_LABEL[pack.status]}</span>
               <div className="ver" style={{ marginTop: 10 }}>
-                {pack.agents.join(" · ")}
+                {AGENT_IDS.map((id) => AGENT_GUIDES[id].name).join(" · ")}
+              </div>
+              <div className="ver" style={{ marginTop: 4 }}>
+                {FIT_LABEL.documented} - runtime behavior not tested by PackProof
               </div>
               <div style={{ marginTop: 12 }}>
                 <SaveButton slug={pack.slug} />
@@ -85,6 +90,11 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <span className="note">
                 version-checked download · no account needed · inspect before adding
               </span>
+              <ol className="install-steps">
+                <li>Download the SKILL.md (or copy the command below).</li>
+                <li>Save it in your agent&apos;s skills folder.</li>
+                <li>Reload skills in your agent and review its first run.</li>
+              </ol>
               <PackInstall slug={pack.slug} version={pack.version} />
             </>
           ) : (
@@ -97,6 +107,8 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
             </>
           )}
         </div>
+
+        {pack.published && <SkillPreview slug={pack.slug} />}
 
         {e && (
           <div className="stats" style={{ position: "relative" }}>

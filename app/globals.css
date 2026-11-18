@@ -143,7 +143,7 @@ h1.hero .hl2 { background: var(--gold); padding: 0 12px; }
 .install .cmd { font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 15px; color: var(--gold); }
 .install .note { font-size: 10.5px; color: rgba(239, 232, 218, 0.88); margin-left: auto; text-align: right; max-width: 320px; font-family: var(--font-jbmono), "JetBrains Mono", monospace; }
 .install-cmd { min-width: 0; max-width: 100%; flex-basis: 100%; display: flex; align-items: center; gap: 12px; margin-top: 4px; background: rgba(239, 232, 218, 0.07); border: 1.5px dashed rgba(239, 232, 218, 0.4); padding: 9px 12px; }
-.install-cmd code { min-width: 0; font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 12px; color: var(--paper); white-space: nowrap; overflow-x: auto; flex: 1; }
+.install-cmd code { min-width: 0; font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 12px; color: var(--paper); white-space: pre-wrap; overflow-wrap: anywhere; flex: 1; line-height: 1.6; }
 .btn-dl { font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 12px; background: var(--red); color: var(--paper); padding: 10px 18px; text-decoration: none; border: none; cursor: pointer; box-shadow: 2px 2px 0 rgba(239, 232, 218, 0.25); white-space: nowrap; }
 .copybtn { background: none; border: 1px solid rgba(239, 232, 218, 0.4); color: rgba(239, 232, 218, 0.8); font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 11px; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
 .copybtn:hover { border-color: var(--gold); color: var(--gold); }
@@ -468,3 +468,58 @@ button:focus-visible,select:focus-visible,.skill-filters input:focus-visible,.sk
  .nav-links { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px 10px; overflow:visible; }
  .nav-links a { min-height:44px; display:flex; align-items:center; justify-content:center; padding:8px 0; }
 }
+
+
+/* ---------- job grid (task-first home) ---------- */
+.job-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; scroll-margin-top: 24px; }
+.job-card { position: relative; display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 18px 18px 16px; text-decoration: none; color: var(--ink); min-height: 132px; }
+.job-card b { font-size: 19px; font-weight: 400; line-height: 1.25; }
+.job-card small { font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 11px; color: var(--muted); line-height: 1.5; }
+.job-count { margin-top: auto; font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); }
+.job-empty .job-count { color: var(--red); }
+.job-arrow { position: absolute; top: 12px; right: 14px; font-size: 18px; color: var(--red); }
+.job-card:nth-child(odd) { transform: rotate(-0.5deg); }
+.job-card:nth-child(even) { transform: rotate(0.4deg); }
+.job-card:nth-child(3n) { transform: rotate(-0.2deg) translateY(3px); }
+@media (prefers-reduced-motion: no-preference) {
+  .job-card { transition: transform 160ms ease, box-shadow 160ms ease; }
+  .job-card:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 7px 9px 0 rgba(43, 36, 28, 0.22); }
+  .job-card:hover .job-arrow { transform: translateX(3px); }
+  .job-arrow { transition: transform 160ms ease; }
+  .reveal-up { animation: pp-rise 500ms ease-out both; }
+  .reveal-stamp { animation: pp-stamp 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  .packs > *, .journey .step, .job-card { animation: pp-rise 480ms ease-out both; }
+  .job-card:nth-child(2) { animation-delay: 40ms; } .job-card:nth-child(3) { animation-delay: 80ms; }
+  .job-card:nth-child(4) { animation-delay: 120ms; } .job-card:nth-child(5) { animation-delay: 40ms; }
+  .job-card:nth-child(6) { animation-delay: 80ms; } .job-card:nth-child(7) { animation-delay: 120ms; }
+  .job-card:nth-child(8) { animation-delay: 160ms; }
+}
+@keyframes pp-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+@keyframes pp-stamp { from { opacity: 0; transform: rotate(-1deg) scale(1.25); } to { opacity: 1; transform: rotate(-1deg) scale(1); } }
+.job-card:focus-visible, .btn:focus-visible, .chip:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+@media (max-width: 1080px) { .job-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .job-grid { grid-template-columns: 1fr; } }
+
+/* ---------- install steps + skill preview ---------- */
+.install-steps { flex-basis: 100%; margin: 6px 0 0; padding-left: 20px; font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.9; color: rgba(239, 232, 218, 0.92); }
+.skill-preview { margin-top: 20px; color: var(--ink); background: var(--card); border: 2px solid var(--ink); box-shadow: var(--shadow); padding: 20px 22px; }
+.skill-preview h2 { font-size: 22px; font-weight: 400; margin-bottom: 6px; }
+.skill-preview-note { font-size: 12.5px; color: var(--muted); max-width: 640px; line-height: 1.6; }
+.skill-preview-pre { margin-top: 12px; background: var(--ink); color: var(--paper); padding: 14px 16px; font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.65; overflow-x: auto; white-space: pre; max-height: 420px; overflow-y: auto; }
+.skill-preview .skill-source-link { display: inline-block; margin-top: 12px; }
+
+/* ---------- scrapbook flowers + job-card tape ---------- */
+.jobs-head { position: relative; margin-top: 52px; display: flex; align-items: baseline; gap: 14px; }
+.jobs-title { font-size: 30px; font-weight: 400; transform: rotate(-0.6deg); }
+.flower-doodle { width: 44px; height: auto; flex: none; }
+.fl-1 { transform: rotate(-8deg); }
+.fl-2 { width: 34px; transform: rotate(10deg) translateY(4px); }
+.fl-3 { width: 28px; transform: rotate(-16deg) translateY(8px); }
+@media (prefers-reduced-motion: no-preference) {
+  .flower-doodle { animation: pp-sway 7s ease-in-out infinite; transform-origin: 50% 95%; }
+  .fl-2 { animation-delay: -2.3s; } .fl-3 { animation-delay: -4.1s; }
+}
+@keyframes pp-sway { 0%, 100% { rotate: -2deg; } 50% { rotate: 2.5deg; } }
+.job-card::before { content: ""; position: absolute; top: -9px; left: 22px; width: 58px; height: 16px; background: rgba(217, 164, 65, 0.5); transform: rotate(-2deg); }
+.job-card:nth-child(even)::before { left: auto; right: 24px; transform: rotate(2.5deg); }
+.job-grid { margin-top: 22px; }

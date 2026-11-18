@@ -3,9 +3,10 @@
 import { useEffect, useRef } from "react";
 import { Icon } from "./Icons";
 
-// Global nav search: searches live GitHub skill repos via /discover (the
-// user's actual ask), not just the sample registry. The registry has its
-// own filter form on /packs, labeled as such. The pending feedback on
+// Global nav search: searches the PackProof catalog first (/skills) - the
+// main search must search the product, not bypass it. GitHub Discover stays
+// one click away as a clearly labeled unvetted secondary on /skills. The
+// pending feedback on
 // submit (kbd swaps to "Searching", input turns readOnly, restored on
 // bfcache) is handled by the delegated script in app/layout.tsx.
 export default function SearchBox({ defaultQuery = "" }: { defaultQuery?: string }) {
@@ -32,7 +33,7 @@ export default function SearchBox({ defaultQuery = "" }: { defaultQuery?: string
   }, []);
 
   return (
-    <form className="searchbox" action="/discover" method="get" aria-busy="false">
+    <form className="searchbox" action="/skills" method="get" aria-busy="false">
       <div className="search">
         <Icon name="search" />
         <input
@@ -41,10 +42,10 @@ export default function SearchBox({ defaultQuery = "" }: { defaultQuery?: string
           name="q"
           defaultValue={defaultQuery}
           enterKeyHint="search"
-          placeholder="Search skill repos"
-          aria-label="Search GitHub skill repos"
+          placeholder="Search PackProof skills"
+          aria-label="Search PackProof skills"
         />
-        <button className="nav-search-submit" type="submit" aria-label="Search GitHub skill repos" title="Search (Enter)">Go</button>
+        <button className="nav-search-submit" type="submit" aria-label="Search PackProof skills" title="Search PackProof skills (Enter)">Go</button>
         <span className="search-pending" role="status" hidden>
           Searching<span className="loading-dots" aria-hidden="true" />
         </span>

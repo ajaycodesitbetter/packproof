@@ -5,7 +5,13 @@ import { Pack } from "./types";
 // labels this on every page. Structure, sums and statuses are kept internally
 // coherent so the evidence model is real even though the numbers are staged.
 
-export const AGENTS = ["Claude Code", "Codex", "Cursor", "Windsurf"];
+import { AGENT_GUIDES, AGENT_IDS } from "./agents";
+
+// One agent list for the whole site (fixes the historical contradiction where
+// packs named Cursor/Windsurf but the install selector offered Antigravity).
+// A pack names an agent only when there is a documented skills path we have
+// verified the location of. Fit detail lives in lib/agents.ts.
+export const AGENTS = AGENT_IDS.filter((id) => AGENT_GUIDES[id].fit === "documented" && AGENT_GUIDES[id].path !== null).map((id) => AGENT_GUIDES[id].name);
 
 export const PACKS: Pack[] = [
   {
