@@ -102,7 +102,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
           <span className="sample-stamp">Sample data</span>
             <div className="stat">
               <div className="v">{e.runs}</div>
-              <div className="l">staged sample rows · not a measurement</div>
+              <div className="l">sample rows - not real evaluation results</div>
             </div>
             <div className="stat">
               <div className="v">{e.taskCount}</div>
@@ -113,8 +113,8 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <div className="l">reps per cell, staged</div>
             </div>
             <div className="stat">
-              <div className="v">0</div>
-              <div className="l">real runs executed</div>
+              <div className="v">{STATUS_LABEL[pack.status]}</div>
+              <div className="l">evidence status</div>
             </div>
           </div>
         )}
@@ -145,8 +145,8 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
                 </tbody>
               </table>
               <p className="note-card" style={{ marginTop: 10 }}>
-                No baseline/with-pack comparison is shown: these rows are staged examples, not
-                measurements. Verdict labels were removed for the same reason.
+                Sample rows, not real evaluation results - so no baseline/with-pack scores or
+                verdict labels are shown.
               </p>
               </div>
               {pack.status === "evidence-complete" && (

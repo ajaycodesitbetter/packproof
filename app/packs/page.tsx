@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PackCard from "@/components/PackCard";
 import { getAllPacks, getCategories, normalizeCategory, searchPacks, fmtDate } from "@/lib/packs";
+import { JOBS, jobCounts } from "@/lib/jobs";
 
 export const metadata: Metadata = {
   title: "The registry - PackProof",
@@ -30,6 +31,7 @@ export default async function PacksPage({
 
   const cats = getCategories();
   const total = cats.reduce((n, c) => n + c.count, 0);
+  const counts = jobCounts();
   // Newest pack release in the registry data, not a hand-typed date that
   // silently goes stale.
   const lastUpdated = fmtDate(getAllPacks().map((p) => p.released).sort().at(-1)!);
@@ -60,6 +62,14 @@ export default async function PacksPage({
             <input type="search" name="q" placeholder="Filter the registry, e.g. migration" defaultValue={q} aria-label="Filter the registry" />
             <button type="submit">Search</button>
           </form>
+        </div>
+        <div className="catrow">
+          <span className="catlbl">By job</span>
+          {JOBS.map((j) => (
+            <Link key={j.id} className="chip" href={`/skills?job=${j.id}`}>
+              {j.name} <i>{counts[j.id] ?? 0}</i>
+            </Link>
+          ))}
         </div>
         <div className="catrow" id="categories">
           <span className="catlbl">Category</span>

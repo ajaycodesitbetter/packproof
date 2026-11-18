@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Pack, STATUS_LABEL } from "@/lib/types";
 import { Icon } from "./Icons";
+import { JOBS, packJob } from "@/lib/jobs";
 
 // Evidence numbers in the registry are staged samples. Cards therefore show
 // structure (how the sample is shaped) and never verdicts or comparisons.
 function runsLabel(p: Pack): string {
   if (!p.evidence) return p.reportDue ?? "In testing";
   const e = p.evidence;
-  return `${e.runs} staged sample rows · ${e.taskCount} tasks x ${e.reps} reps · not a measurement`;
+  return `${e.runs} sample rows · ${e.taskCount} tasks x ${e.reps} reps - not real evaluation results`;
 }
 
 export default function PackCard({ pack }: { pack: Pack }) {
@@ -24,15 +25,10 @@ export default function PackCard({ pack }: { pack: Pack }) {
       </div>
       <h3>{pack.name}</h3>
       <div className="ver">
-        v{pack.version} · {pack.category}
+        v{pack.version} · {JOBS.find((j) => j.id === packJob(pack.slug))?.name ?? pack.category}
       </div>
       <p className="task">{pack.tagline}</p>
       <div className="runs">{runsLabel(pack)}</div>
-      <div className="meter none"></div>
-      <div className="meter-lbls">
-        <span>NO REAL RUNS EXECUTED</span>
-        <span></span>
-      </div>
     </Link>
   );
 }
