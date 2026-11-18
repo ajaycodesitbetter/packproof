@@ -12,10 +12,11 @@ export interface Job {
 }
 
 export const JOBS: Job[] = [
-  { id: "build-app", name: "Build an app", blurb: "Setup, config and app plumbing" },
+  { id: "build-app", name: "Build an app", blurb: "Setup and config plumbing - a full app kit is not vetted yet" },
   { id: "design-ui", name: "Design & UI", blurb: "Interfaces, reviews and visual detail" },
   { id: "video", name: "Video & motion", blurb: "Programmatic video, captions and media" },
-  { id: "review-secure", name: "Review & secure code", blurb: "Reviews and safe-change habits" },
+  { id: "review-secure", name: "Review code", blurb: "Structured review passes before you ship" },
+  { id: "security", name: "Security review", blurb: "Audits and hardening" },
   { id: "test-debug", name: "Test & debug", blurb: "Failing tests first, flaky hunts, regressions" },
   { id: "research-write", name: "Research & write", blurb: "Briefs, scans and sourced writeups" },
   { id: "documents", name: "Documents", blurb: "PDF and document workflows" },

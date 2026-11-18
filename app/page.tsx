@@ -1,14 +1,20 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import PackCard from "@/components/PackCard";
 import FlowerDoodle from "@/components/FlowerDoodle";
-import { getFeatured } from "@/lib/packs";
 import { AGENT_GUIDES, AGENT_IDS } from "@/lib/agents";
 import { JOBS, jobCounts } from "@/lib/jobs";
 
+const STARTERS = [
+  { use: "Design an interface that feels intentional", name: "Frontend design", maker: "Anthropic", badge: "Upstream - source checked", href: "/skills?job=design-ui" },
+  { use: "Catch regressions before you change an API", name: "API Change Safety Net", maker: "PackProof", badge: "Pack - sample report", href: "/packs/api-change-safety-net" },
+  { use: "Review a small PR in three passes", name: "PR Review Pass", maker: "PackProof", badge: "Pack - sample partial", href: "/packs/pr-review-pass" },
+  { use: "Add captions to a programmatic video", name: "Caption workflow", maker: "Remotion", badge: "Upstream - source checked", href: "/skills?job=video" },
+  { use: "Extract and combine PDF documents", name: "PDF processing", maker: "Anthropic", badge: "Upstream - source checked", href: "/skills?job=documents" },
+  { use: "Turn a loose question into a sourced brief", name: "Research Brief", maker: "PackProof", badge: "Pack - not evaluated", href: "/packs/research-brief" },
+];
+
 export default function Home() {
-  const featured = getFeatured();
   const counts = jobCounts();
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const steps = [
@@ -73,11 +79,19 @@ export default function Home() {
             <span key={id} className="cell" title={AGENT_GUIDES[id].note}>{AGENT_GUIDES[id].name}</span>
           ))}
         </div>
-        <section className="packs">
-          {featured.map((p) => (
-            <PackCard key={p.slug} pack={p} />
+        <div className="jobs-head">
+          <h2 className="jobs-title">Good starting points</h2>
+        </div>
+        <section className="starter-grid" aria-label="Good starting points">
+          {STARTERS.map((s) => (
+            <Link key={s.name} className="starter-card" href={s.href}>
+              <b>{s.use}</b>
+              <span className="starter-name">{s.name} · {s.maker}</span>
+              <span className="starter-badge">{s.badge}</span>
+            </Link>
           ))}
         </section>
+        <p className="starter-more"><Link href="/skills">See all {total} workflows in the field guide →</Link> or <Link href="/packs">browse PackProof packs</Link>.</p>
         <section className="journey">
           {steps.map((s, i) => (
             <div className="step" key={s.t}>

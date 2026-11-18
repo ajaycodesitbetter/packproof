@@ -7,8 +7,8 @@ import SkillPreview from "@/components/SkillPreview";
 import { AGENT_GUIDES, AGENT_IDS, FIT_LABEL } from "@/lib/agents";
 import SaveButton from "@/components/SaveButton";
 import { Icon } from "@/components/Icons";
-import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
-import { STATUS_LABEL, VERDICT_LABEL, Verdict } from "@/lib/types";
+import { getAllPacks, getPack, fmtDate } from "@/lib/packs";
+import { STATUS_LABEL } from "@/lib/types";
 
 // Only registry slugs exist; reject unknown routes before streaming a 200 shell.
 export const dynamicParams = false;
@@ -26,14 +26,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: pack.tagline,
   };
 }
-
-const VD_CLASS: Record<Verdict, string> = {
-  improved: "imp",
-  regression: "reg",
-  "no-change": "same",
-  "correctly-idle": "idle",
-  pending: "pend",
-};
 
 export default async function PackPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -90,11 +82,6 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <span className="note">
                 version-checked download · no account needed · inspect before adding
               </span>
-              <ol className="install-steps">
-                <li>Download the SKILL.md (or copy the command below).</li>
-                <li>Save it in your agent&apos;s skills folder.</li>
-                <li>Reload skills in your agent and review its first run.</li>
-              </ol>
               <PackInstall slug={pack.slug} version={pack.version} />
             </>
           ) : (
@@ -115,25 +102,19 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
           <span className="sample-stamp">Sample data</span>
             <div className="stat">
               <div className="v">{e.runs}</div>
-              <div className="l">runs · {e.taskCount} tasks × {e.reps} reps × 2</div>
+              <div className="l">staged sample rows · not a measurement</div>
             </div>
             <div className="stat">
-              <div className="v">
-                {e.baseSolved}/{e.baseTotal}
-              </div>
-              <div className="l">baseline ({pct(e.baseSolved, e.baseTotal)}%)</div>
+              <div className="v">{e.taskCount}</div>
+              <div className="l">tasks in the staged matrix</div>
             </div>
             <div className="stat">
-              <div className="v">{e.packSolved !== null ? `${attemptedSolved(e)}/${attemptedTotal(e)}` : "-"}</div>
-              <div className="l">
-                {e.packSolved !== null
-                  ? `with pack (${pct(attemptedSolved(e), attemptedTotal(e))}% of attempted · ${idleRunCount(e)} correctly idle)`
-                  : "with pack - no sample data"}
-              </div>
+              <div className="v">{e.reps}</div>
+              <div className="l">reps per cell, staged</div>
             </div>
             <div className="stat">
-              <div className="v">{e.regressions}</div>
-              <div className="l">regression{e.regressions === 1 ? "" : "s"} kept in report</div>
+              <div className="v">0</div>
+              <div className="l">real runs executed</div>
             </div>
           </div>
         )}
@@ -148,33 +129,25 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
               <table className="ttasks">
                 <thead>
                   <tr>
-                    <th>Task</th>
-                    <th>Baseline</th>
-                    <th>With pack</th>
-                    <th>Verdict</th>
+                    <th>Task in the staged matrix</th>
+                    <th>Reps</th>
+                    <th>Rows</th>
                   </tr>
                 </thead>
                 <tbody>
                   {e.tasks.map((t) => (
                     <tr key={t.task}>
                       <td className="mono">{t.task}</td>
-                      <td className="num">
-                        {t.baseSolved}/{t.reps}
-                      </td>
-                      <td className="num">
-                        {t.packSolved !== null
-                          ? t.verdict === "correctly-idle"
-                            ? `${t.reps} idle`
-                            : `${t.packSolved}/${t.reps}`
-                          : "-"}
-                      </td>
-                      <td>
-                        <span className={`vd ${VD_CLASS[t.verdict]}`}>{VERDICT_LABEL[t.verdict]}</span>
-                      </td>
+                      <td className="num">{t.reps}</td>
+                      <td className="num">staged</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <p className="note-card" style={{ marginTop: 10 }}>
+                No baseline/with-pack comparison is shown: these rows are staged examples, not
+                measurements. Verdict labels were removed for the same reason.
+              </p>
               </div>
               {pack.status === "evidence-complete" && (
                 <p className="note-card" style={{ marginTop: 12 }}>
@@ -207,7 +180,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
 
         {e?.keptFailures && (
           <div className="callout">
-            <b>{pack.status === "partial" ? "Status" : "Kept failure"}</b> - {e.keptFailures}
+            <b>{pack.status === "partial" ? "Status" : "Staged sample note"}</b> - {e.keptFailures}
           </div>
         )}
         {!e && pack.reportDue && (

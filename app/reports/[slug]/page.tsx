@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { getAllPacks, getPack, pct, fmtDate, idleRunCount, attemptedSolved, attemptedTotal } from "@/lib/packs";
-import { VERDICT_LABEL, Verdict } from "@/lib/types";
+import { getAllPacks, getPack, fmtDate } from "@/lib/packs";
 
 // Only registry slugs exist; reject unknown routes before streaming a 200 shell.
 export const dynamicParams = false;
@@ -14,43 +13,11 @@ export function generateStaticParams() {
     .map((p) => ({ slug: p.slug }));
 }
 
-const VD_CLASS: Record<Verdict, string> = {
-  improved: "imp",
-  regression: "reg",
-  "no-change": "same",
-  "correctly-idle": "idle",
-  pending: "pend",
-};
-
-function Ticks({ ticks }: { ticks?: string[] }) {
-  if (!ticks) return null;
-  return (
-    <span className="ticks">
-      {ticks.map((t, i) =>
-        t === "idle" ? (
-          <span key={i} className="idl" title="correctly idle (pack not run)">
-            –
-          </span>
-        ) : (
-          <span key={i} className={t === "pass" ? "ok" : "no"}>
-            {t === "pass" ? "✓" : "✗"}
-          </span>
-        )
-      )}
-    </span>
-  );
-}
-
 export default async function ReportPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const pack = getPack(slug);
   if (!pack || !pack.evidence || pack.status !== "evidence-complete") notFound();
   const e = pack.evidence;
-  const basePct = pct(e.baseSolved, e.baseTotal);
-  const attSolved = attemptedSolved(e);
-  const attTotal = attemptedTotal(e);
-  const packPct = pct(attSolved, attTotal);
-  const idleRuns = idleRunCount(e);
 
   return (
     <>
@@ -74,71 +41,37 @@ export default async function ReportPage({ params }: { params: Promise<{ slug: s
           </p>
         </section>
 
-        <div className="bigmeter">
+        <div className="card">
           <span className="ptape"></span>
           <span className="sample-stamp">Sample data</span>
-          <h2>Tasks passed, baseline vs pack</h2>
-          <div className="row">
-            <span className="who">BASE</span>
-            <div className="bar">
-              <i className="b1" style={{ width: `${basePct}%` }}></i>
-            </div>
-            <span className="val">
-              {e.baseSolved}/{e.baseTotal} · {basePct}%
-            </span>
-          </div>
-          <div className="row">
-            <span className="who">PACK</span>
-            <div className="bar">
-              <i className="b2" style={{ width: `${packPct}%` }}></i>
-            </div>
-            <span className="val">
-              {attSolved}/{attTotal} attempted · {packPct}%{idleRuns > 0 ? ` · ${idleRuns} correctly idle` : ""}
-            </span>
-          </div>
-          <div className="sumchips">
-            <span className="vd imp">{e.improved} improved</span>
-            <span className="vd reg">
-              {e.regressions} regression{e.regressions === 1 ? "" : "s"}
-            </span>
-            <span className="vd same">{e.noChange} no change</span>
-            <span className="vd idle">{e.correctlyIdle} correctly idle</span>
-          </div>
+          <h2>What a real report will show</h2>
+          <p className="task">
+            When real runs exist, this page compares baseline vs pack task by task - same tasks,
+            same model, same repo, the pack as the only difference - and keeps failures visible
+            instead of cherry-picking. No baseline bars, score columns or verdict labels are shown
+            here, because every number on this page is staged.
+          </p>
         </div>
 
         <div className="card" style={{ marginTop: 24 }}>
           <span className="ptape"></span>
           <span className="sample-stamp">Sample data</span>
-          <h2>Every run, no cherry-picking</h2>
+          <h2>The staged task matrix</h2>
           <div className="twrap">
           <table className="ttasks">
             <thead>
               <tr>
-                <th>Task</th>
-                <th>Baseline reps</th>
-                <th>Pack reps</th>
-                <th>Verdict</th>
+                <th>Task in the staged matrix</th>
+                <th>Reps</th>
+                <th>Rows</th>
               </tr>
             </thead>
             <tbody>
               {e.tasks.map((t) => (
                 <tr key={t.task}>
                   <td className="mono">{t.task}</td>
-                  <td>
-                    <Ticks ticks={t.baseTicks} />{" "}
-                    <span className="num">
-                      {t.baseSolved}/{t.reps}
-                    </span>
-                  </td>
-                  <td>
-                    <Ticks ticks={t.packTicks} />{" "}
-                    <span className="num">
-                      {t.verdict === "correctly-idle" ? `${t.reps} idle` : `${t.packSolved}/${t.reps}`}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`vd ${VD_CLASS[t.verdict]}`}>{VERDICT_LABEL[t.verdict]}</span>
-                  </td>
+                  <td className="num">{t.reps}</td>
+                  <td className="num">staged</td>
                 </tr>
               ))}
             </tbody>
