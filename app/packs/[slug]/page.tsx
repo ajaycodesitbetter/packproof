@@ -157,7 +157,7 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
           <div className="card">
-            <h2>Versions</h2>
+            <h2>Versions <span className="vh-sample">sample history</span></h2>
             <div className="vlist">
               {pack.changelog.map((c) => (
                 <div key={c.version}>
@@ -165,6 +165,10 @@ export default async function PackPage({ params }: { params: Promise<{ slug: str
                 </div>
               ))}
             </div>
+            <p className="vh-note">
+              Illustrative entries, not a record of real releases - they show how version history
+              will read once packs ship real versions.
+            </p>
             {pack.doesNot && (
               <>
                 <h2 style={{ marginTop: 18 }}>What it does not do</h2>

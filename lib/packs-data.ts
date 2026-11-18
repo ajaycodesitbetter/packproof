@@ -52,7 +52,7 @@ export const PACKS: Pack[] = [
         { task: "change-response-shape", baseSolved: 0, packSolved: 3, reps: 3, baseTicks: ["fail", "fail", "fail"], packTicks: ["idle", "idle", "idle"], verdict: "correctly-idle" },
       ],
       keptFailures:
-        "Staged example of how this section reads once real runs exist: a task like deprecate-route could regress with the pack - say 2 of 3 runs missed the docs update - and the failure would stay listed here, not hidden, with the fix tracked for the next version. No benchmark runs happened; this narrative is illustrative sample text.",
+        "Staged example of how this section reads once real runs exist: a task like deprecate-route could regress with the pack - say 2 of 3 runs missed the docs update - and the failure would stay listed here, not hidden, with the fix tracked for the next version. No benchmark runs happened for this sample report; the narrative is illustrative sample text.",
       reproduce:
         "Pinned in this report (sample values): seed pp034-20261112, model claude-sonnet-4.6, task-repo snapshot pp-tasks-2026-11-12. Illustrative identifiers only: no task repository, environment record or raw logs exist for this sample.",
     },

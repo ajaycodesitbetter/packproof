@@ -163,6 +163,8 @@ table.ttasks { width: 100%; border-collapse: collapse; margin-top: 10px; }
 .ttasks th { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left; color: rgba(43, 36, 28, 0.8); padding: 8px 10px; border-bottom: 2px solid rgba(43, 36, 28, 0.7); }
 .ttasks td { font-size: 12.5px; padding: 9px 10px; border-bottom: 1px dashed rgba(43, 36, 28, 0.35); }
 .ttasks .num { font-family: var(--font-jbmono), "JetBrains Mono", monospace; font-size: 12px; }
+.vh-sample { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); border: 1.5px dashed var(--red); padding: 2px 7px; margin-left: 8px; vertical-align: middle; display: inline-block; transform: rotate(1.5deg); }
+.vh-note { margin-top: 10px; font-size: 11.5px; color: rgba(43,36,28,.7); }
 .vd { display: inline-block; font-size: 9.5px; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border: 1.5px solid var(--ink); white-space: nowrap; }
 .vd.imp { background: var(--red); color: var(--paper); border-color: var(--red); }
 .vd.reg { background: var(--ink); color: var(--paper); }
