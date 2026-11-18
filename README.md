@@ -1,70 +1,63 @@
 # PackProof
 
-Skill packs with published proof. Small workflow packs for coding agents - every
-release ships pinned versions, before-and-after runs, and the failures.
+Task-first discovery for agent workflows, with source links, setup guidance and explicit evidence limits. The interface keeps a paper-and-ink scrapbook style.
 
-**Concept stage:** the registry's versions, counts and evidence numbers are
-staged sample data (labeled on every page). The pack files themselves are real
-and usable; live benchmark runs are the next milestone.
+## What works
 
-## Stack
+- 12 downloadable PackProof SKILL.md workflow documents.
+- `/skills`: a local-search field guide with agent, task and source filters; an editorial shortlist links to original upstream projects instead of mirroring their code.
+- `/discover`: live public GitHub repo search and discovery shelves. GitHub popularity is not a quality or safety score.
+- GitHub sign-in and a per-user saved-pack library, backed by Turso/libSQL in the current Vercel deployment.
+- Version-checked pack downloads. Existing unversioned download URLs remain supported. A requested version that is not available returns 409 rather than silently substituting a newer one.
 
-- Next.js 15 (App Router, TypeScript), hand-written CSS, no UI framework
-- Backend: Next.js API routes serving the registry, search, categories,
-  pack-file downloads and the per-user library
-- Data: typed seed registry in `lib/packs-data.ts`, pack artifacts in
-  `lib/skill-files.ts`
-- Auth: GitHub OAuth via Auth.js (`auth.ts`)
-- Per-user library: one row per (user, pack) save - atomic, idempotent writes
-  with no read-modify-write race. Storage backends selectable per deployment:
-  - Cloudflare D1 (`PACKPROOF_STORE=d1`, migration in `migrations/0001_library.sql`)
-  - Netlify Blobs (default on Netlify)
-  - Local JSON file (dev only)
+## Evidence limits
 
-## Develop
+All legacy registry versions, dates, scores and benchmark reports are staged sample data. No pack is represented as benchmark-validated. Upstream source checks are not execution tests or security certification. Agent install locations are grounded in the vendors' documentation, but runtime compatibility has not been established across Claude Code, Codex and Antigravity.
 
-```bash
-npm install
-npm run dev    # http://localhost:3000
-npm run build  # production build
+The exploratory `benchmarks/pr-review-pilot` is separate from the sample reports. A one-repetition, one-model, prompt-level comparison cannot establish general effectiveness or installed-agent compatibility. Do not turn pilot data into a validated badge.
+
+## Stack and development
+
+Next.js 15 App Router, React, TypeScript and handwritten CSS. No UI framework. Auth.js provides identity-only GitHub sign-in. Production uses the libSQL store; legacy D1/Netlify adapters remain in source but are not the current deployment route.
+
+```sh
+npm ci
+npm run dev
+npm run build
+npm start
 ```
 
-## Test
+See `DEPLOYMENT.md` for runtime requirements. Never commit environment files or credentials.
 
-```bash
-# Local isolation/race tests for the D1 library path with synthetic identities
-npx wrangler d1 execute packproof-library-test --local --config wrangler.test.jsonc --file migrations/0001_library.sql
-npx wrangler dev --local --config wrangler.test.jsonc --define "process.env.NODE_ENV:\"production\""
-# then drive http://localhost:8787/save?user=X&slug=Y and /get?user=X
+## Acceptance checks
+
+```sh
+npx tsx test/discovery.test.mts
+npx tsx test/coord-libsql.test.mts
+npx tsx test/return-path.test.mts
+node test/search-route.test.cjs
+npx tsx test/library-http.test.mts
+node test/recovery.test.mjs
+# After npm run build, offline local server/session test:
+node scripts/session-check.mjs
+# Against a running local production server on port 3100:
+CHECK_VERSION_GUARD=1 node scripts/smoke.mjs http://localhost:3100
+CHROME_PATH=/usr/bin/google-chrome node scripts/browser-check.cjs http://localhost:3100
+npm audit --omit=dev
 ```
 
-## API
+The browser suite uses the Playwright dev dependency and an existing Chrome executable. Set `CHROME_PATH` to its installed location. It does not download a browser. HTTP checks are read-only and do not sign in or change library data. The version-guard flag is for the prepared release; omit it when checking an older deployment.
 
-| Route | What it does |
-| --- | --- |
-| `GET /api/packs` | List packs; `?category=Backend` and `?q=term` filters |
-| `GET /api/packs/[slug]` | One pack, full evidence detail |
-| `GET /api/categories` | Categories with computed counts |
-| `GET /api/search?q=...` | Ranked search across name, slug, category, text |
-| `GET /api/packs/[slug]/download` | Download the pack's SKILL.md (409 while unpublished) |
-| `GET /api/library` | Signed-in user's saved packs (401 signed out) |
-| `POST /api/library` | Desired-state save/unsave: `{ slug, saved }` (401 signed out) |
+## Routes
 
-## Pages
+`/` home; `/skills` task and agent field guide; `/packs` PackProof registry; `/packs/[slug]` pack details; `/reports/[slug]` sample reports; `/discover` live GitHub discovery; `/library` saved packs; `/signin` explanation before GitHub OAuth; `/method` evidence protocol; `/changelog` sample version history.
 
-`/` home · `/packs` registry (filter + search) · `/packs/[slug]` detail ·
-`/reports/[slug]` release report · `/categories/[cat]` · `/changelog` ·
-`/method` · `/library` · `/discover` live GitHub discovery (fresh skill repos +
-star-ranked category shelves, 6h cache)
+JSON APIs: `/api/packs`, `/api/packs/[slug]`, `/api/packs/[slug]/download`, `/api/categories`, `/api/search`, `/api/discover`, `/api/library`. Library access requires a valid authenticated session. Authenticated writes use desired state `{slug, saved}` rather than a toggle.
 
-## Deploy
+## Safe use and licensing
 
-Two supported targets, same codebase:
+Skills can influence an agent that has file, network or command access. Read the complete skill bundle and keep normal permission prompts enabled. A shared SKILL.md format does not make scripts, tools or dependencies portable or safe.
 
-- **Cloudflare Workers**: `wrangler.jsonc` + `open-next.config.ts`
-  (@opennextjs/cloudflare), library in D1
-- **Netlify**: `netlify.toml`, library in Netlify Blobs
+External entries link to their source; no third-party instructions or assets are redistributed by the catalog. License notes are entry-specific. Some upstream product dependencies have their own terms or costs. The legacy PackProof license fields are part of sample registry metadata; a repository-wide license and release policy still require an explicit owner decision before those labels can be treated as a legal grant.
 
----
-
-Ajay Mathuriya · @codesitbetter
+Local authorization, bounded burst and recovery drill details are in `docs/operations.md`. They do not replace real OAuth/live acceptance or an owner-approved production backup policy.

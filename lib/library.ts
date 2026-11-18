@@ -103,13 +103,13 @@ async function getD1(): Promise<D1Like> {
   return db as D1Like;
 }
 
-function withTimeout<T>(p: Promise<T>, what: string): Promise<T> {
-  return Promise.race([
-    p,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS)
-    ),
-  ]);
+async function withTimeout<T>(p: Promise<T>, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([p, new Promise<T>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${what} timed out after ${BLOBS_TIMEOUT_MS}ms`)), BLOBS_TIMEOUT_MS);
+    })]);
+  } finally { if (timer) clearTimeout(timer); }
 }
 
 async function readLocal(): Promise<Record<string, string[]>> {

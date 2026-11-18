@@ -5,9 +5,10 @@
 // app/layout.tsx) - it flips aria-busy, disables the button and swaps the
 // label spans, and resets on bfcache restore. This component itself is
 // static markup; the native submission is never intercepted.
-export default function DiscoverSearchForm({ defaultQuery }: { defaultQuery: string }) {
+export default function DiscoverSearchForm({ defaultQuery, scope = "skills" }: { defaultQuery: string; scope?: "skills" | "all" }) {
   return (
     <form action="/discover" method="get" aria-busy="false">
+      {scope === "all" && <input type="hidden" name="scope" value="all" />}
       <input
         type="search"
         name="q"

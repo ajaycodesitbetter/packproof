@@ -66,7 +66,7 @@ export interface Pack {
 export const STATUS_LABEL: Record<PackStatus, string> = {
   "evidence-complete": "Sample report",
   partial: "Sample partial",
-  testing: "In testing",
+  testing: "Not evaluated",
 };
 
 export const VERDICT_LABEL: Record<Verdict, string> = {

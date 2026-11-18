@@ -11,7 +11,7 @@ export default function AuthButton() {
   }
   if (!session) {
     return (
-      <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <span className="auth-actions signed-out" style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <Link className="btn-sign" href="/library" style={{ textDecoration: "none", background: "none", color: "var(--ink)", border: "1.5px solid rgba(43,36,28,.55)", boxShadow: "2px 2px 0 rgba(43,36,28,.2)" }}>
           My packs
         </Link>
@@ -22,7 +22,7 @@ export default function AuthButton() {
     );
   }
   return (
-    <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+    <span className="auth-actions" style={{ display: "flex", gap: 10, alignItems: "center" }}>
       <Link className="btn-sign" href="/library" style={{ textDecoration: "none" }}>
         My packs
       </Link>

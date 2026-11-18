@@ -2,7 +2,7 @@ import Link from "next/link";
 import SearchBox from "./SearchBox";
 import AuthButton from "./AuthButton";
 
-export default function Nav({ active }: { active?: string }) {
+export default function Nav({ active, searchQuery = "" }: { active?: string; searchQuery?: string }) {
   return (
     <>
       <nav className="nav">
@@ -10,6 +10,7 @@ export default function Nav({ active }: { active?: string }) {
           <span className="stamp">P</span>PackProof
         </Link>
         <div className="nav-links">
+          <Link className={active === "skills" ? "active" : ""} href="/skills">Skills</Link>
           <Link className={active === "packs" ? "active" : ""} href="/packs">Packs</Link>
           <Link className={active === "method" ? "active" : ""} href="/method">Methodology</Link>
           <Link className={active === "changelog" ? "active" : ""} href="/changelog">Changelog</Link>
@@ -17,15 +18,15 @@ export default function Nav({ active }: { active?: string }) {
           <Link className={active === "discover" ? "active" : ""} href="/discover">Discover</Link>
         </div>
         <div className="nav-right">
-          <SearchBox />
+          <SearchBox defaultQuery={searchQuery} />
           <AuthButton />
         </div>
       </nav>
       <div className="demo-banner" role="note">
         <span className="db-stamp">Concept demo</span>
         <span>
-          The pack files are real and downloadable. All versions, counts and evidence numbers are
-          staged sample data - no live benchmark runs yet.
+          PackProof packs are downloadable. Registry benchmark reports are staged samples, not validated results.
+          Upstream picks are source-linked, not run-tested.
         </span>
       </div>
     </>

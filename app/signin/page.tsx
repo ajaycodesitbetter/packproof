@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { safeReturnPath } from "@/lib/return-path";
 import SignInContinue from "@/components/SignInContinue";
 
 export const metadata: Metadata = {
@@ -20,8 +21,7 @@ export default async function SignInPage({
   const sp = await searchParams;
   // Only same-site paths are honoured as callbacks; anything else falls back
   // to the library page.
-  const callbackUrl =
-    sp.callbackUrl && sp.callbackUrl.startsWith("/") ? sp.callbackUrl : "/library";
+  const callbackUrl = safeReturnPath(sp.callbackUrl);
   if (session) redirect(callbackUrl);
 
   return (
