@@ -1,19 +1,19 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { AGENT_GUIDES, AgentId, SKILL_PICKS, TASKS, Task } from "@/lib/skill-catalog";
+import { AGENT_GUIDES, AgentId, SKILL_PICKS } from "@/lib/skill-catalog";
+import { JOBS, packJob, taskJob } from "@/lib/jobs";
 
-interface OwnPack { slug: string; name: string; summary: string; category: string; }
-const packTask = (category: string): Task => category === "Backend" ? "Code & testing" : category === "UI/UX" ? "Design & UI" : "Research & writing";
-export default function SkillsBrowser({ packs, initialTask = "All tasks" }: { packs: OwnPack[]; initialTask?: Task }) {
+interface OwnPack { slug: string; name: string; summary: string; tagline: string; category: string; }
+export default function SkillsBrowser({ packs, initialJob = "all", initialQuery = "" }: { packs: OwnPack[]; initialJob?: string; initialQuery?: string }) {
   const [agent, setAgent] = useState<AgentId | "all">("all");
-  const [task, setTask] = useState<Task>(initialTask);
-  const [query, setQuery] = useState("");
+  const [job, setJob] = useState<string>(initialJob);
+  const [query, setQuery] = useState(initialQuery);
   const [origin, setOrigin] = useState("all");
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (text: string) => terms.every(t => text.toLowerCase().includes(t));
-  const own = origin === "upstream" ? [] : packs.filter(p => (task === "All tasks" || packTask(p.category) === task) && matches(`${p.name} ${p.summary} ${p.category}`));
-  const external = origin === "packproof" ? [] : SKILL_PICKS.filter(p => (task === "All tasks" || p.task === task) && (agent === "all" || p.agents.includes(agent)) && matches(`${p.name} ${p.summary} ${p.maker} ${p.task} ${p.subtask}`));
+  const own = origin === "upstream" ? [] : packs.filter(p => (job === "all" || packJob(p.slug) === job) && matches(`${p.name} ${p.summary} ${p.tagline} ${p.category}`));
+  const external = origin === "packproof" ? [] : SKILL_PICKS.filter(p => (job === "all" || taskJob(p.task) === job) && (agent === "all" || p.agents.includes(agent)) && matches(`${p.name} ${p.summary} ${p.maker} ${p.task} ${p.subtask}`));
   const count = own.length + external.length;
   return <>
     <section className="skill-workbench" aria-label="Find a skill">
@@ -23,17 +23,18 @@ export default function SkillsBrowser({ packs, initialTask = "All tasks" }: { pa
       </div>
       <div className="skill-filters">
         <label>What are you making?<input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Try captions, browser testing, API..." /></label>
-        <label>Task<select value={task} onChange={e => setTask(e.target.value as Task)}>{TASKS.map(t => <option key={t}>{t}</option>)}</select></label>
+        <label>Job<select value={job} onChange={e => setJob(e.target.value)}><option value="all">All jobs</option>{JOBS.map(j => <option key={j.id} value={j.id}>{j.name}</option>)}</select></label>
         <label>Source<select value={origin} onChange={e => setOrigin(e.target.value)}><option value="all">All sources</option><option value="upstream">Upstream shortlist</option><option value="packproof">PackProof packs</option></select></label>
       </div>
+      <p className="skill-filter-note">Not in PackProof yet? <Link href="/discover">Search unvetted GitHub skill repos</Link> - review anything there yourself before installing.</p>
       {agent !== "all" ? <aside className="agent-guide">
-        <div><b>{AGENT_GUIDES[agent].name}: project skill location</b><code>{AGENT_GUIDES[agent].path}</code></div>
-        <p>{AGENT_GUIDES[agent].note} <a href={AGENT_GUIDES[agent].source} target="_blank" rel="noopener noreferrer">Official setup ↗</a></p>
+        <div><b>{AGENT_GUIDES[agent].name}: project skill location</b>{AGENT_GUIDES[agent].path ? <code>{AGENT_GUIDES[agent].path}</code> : <code>Not verified - see note</code>}</div>
+        <p>{AGENT_GUIDES[agent].note} {AGENT_GUIDES[agent].source ? <a href={AGENT_GUIDES[agent].source ?? undefined} target="_blank" rel="noopener noreferrer">Official setup ↗</a> : null}</p>
         <p>PackProof packs use the shared SKILL.md format; agent execution is not verified. Upstream results below are limited to their documented agent, not guessed portability.</p>
       </aside> : <p className="skill-filter-note">Choose an agent for its setup guide. Upstream skills without documented agent support appear only under Any agent.</p>}
     </section>
     <div className="skill-result-line"><h2>Find your next workflow</h2><span role="status" aria-live="polite">{count} {count === 1 ? "match" : "matches"}</span></div>
-    {count === 0 && <div className="skill-empty"><h3>No matching workflow yet.</h3><p>Try a broader task or choose Any agent. We leave gaps visible instead of inventing recommendations.</p><button onClick={() => { setAgent("all");setTask("All tasks");setQuery("");setOrigin("all"); }}>Reset filters</button></div>}
+    {count === 0 && <div className="skill-empty"><h3>No matching workflow yet.</h3><p>Try a broader job or choose Any agent. We leave gaps visible instead of inventing recommendations. You can also <Link href={`/discover${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}>search unvetted GitHub skill repos</Link> - check anything there yourself before installing.</p><button onClick={() => { setAgent("all");setJob("all");setQuery("");setOrigin("all"); }}>Reset filters</button></div>}
     <section className="skill-grid" aria-label="Skill results">
       {external.map(p => <article className="skill-note" key={p.id}>
         <div className={`skill-visual visual-${p.task === "Video & motion" ? "video" : p.task === "Design & UI" ? "design" : p.task === "Documents" ? "docs" : "code"}`} aria-hidden="true"><span>{p.subtask}</span>{p.task === "Video & motion" ? <svg className={`video-cue cue-${p.id}`} viewBox="0 0 280 70" fill="none" aria-hidden="true">
@@ -45,7 +46,7 @@ export default function SkillsBrowser({ packs, initialTask = "All tasks" }: { pa
         <a className="skill-source-link" href={p.source} target="_blank" rel="noopener noreferrer">Inspect upstream source <span aria-hidden="true">↗</span></a></div>
       </article>)}
       {own.map(p => <article className="skill-note own-skill" key={p.slug}>
-        <div className={`skill-visual visual-${p.category === "UI/UX" ? "design" : p.category === "Research" ? "docs" : "code"}`} aria-hidden="true"><span>{packTask(p.category)}</span><i></i><i></i><i></i></div>
+        <div className={`skill-visual visual-${p.category === "UI/UX" ? "design" : p.category === "Research" ? "docs" : "code"}`} aria-hidden="true"><span>{JOBS.find(j => j.id === packJob(p.slug))?.name ?? p.category}</span><i></i><i></i><i></i></div>
         <div className="skill-note-body"><div className="skill-byline">PackProof · workflow document</div><h3>{p.name}</h3><p>{p.summary}</p><div className="skill-evidence sample-evidence">Unvalidated · sample evidence only</div><details><summary>Before you install</summary><p>Real downloadable instructions, not a benchmark-proven improvement. Review the file, choose your agent&apos;s skill folder and keep normal permission prompts enabled.</p><p>Shared SKILL.md format. No cross-agent execution tests have been completed.</p></details><Link className="skill-source-link" href={`/packs/${p.slug}`}>Preview pack & download <span aria-hidden="true">→</span></Link></div>
       </article>)}
     </section>

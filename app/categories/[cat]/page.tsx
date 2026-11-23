@@ -33,11 +33,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ cat: 
 
   return (
     <>
-      <Nav active="categories" />
+      <Nav active="packs" />
       <main>
         <div className="crumb">
           <Link href="/packs">Packs</Link> / Categories / <b>{cat}</b>
         </div>
+        <p className="starter-more" style={{ marginTop: 8 }}>
+          Finding by job instead? <Link href="/skills">Browse the field guide by job</Link> - the
+          same workflows, organized by what you are making.
+        </p>
         <section className="phead">
           <span className="ptape"></span>
           <h1>{cat}</h1>

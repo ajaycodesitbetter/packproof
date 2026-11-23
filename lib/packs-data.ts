@@ -5,7 +5,13 @@ import { Pack } from "./types";
 // labels this on every page. Structure, sums and statuses are kept internally
 // coherent so the evidence model is real even though the numbers are staged.
 
-export const AGENTS = ["Claude Code", "Codex", "Cursor", "Windsurf"];
+import { AGENT_GUIDES, AGENT_IDS } from "./agents";
+
+// One agent list for the whole site (fixes the historical contradiction where
+// packs named Cursor/Windsurf but the install selector offered Antigravity).
+// A pack names an agent only when there is a documented skills path we have
+// verified the location of. Fit detail lives in lib/agents.ts.
+export const AGENTS = AGENT_IDS.filter((id) => AGENT_GUIDES[id].fit === "documented" && AGENT_GUIDES[id].path !== null).map((id) => AGENT_GUIDES[id].name);
 
 export const PACKS: Pack[] = [
   {
@@ -46,7 +52,7 @@ export const PACKS: Pack[] = [
         { task: "change-response-shape", baseSolved: 0, packSolved: 3, reps: 3, baseTicks: ["fail", "fail", "fail"], packTicks: ["idle", "idle", "idle"], verdict: "correctly-idle" },
       ],
       keptFailures:
-        "deprecate-route regressed: with the pack, 2 of 3 runs missed the docs update. Kept in the report, not hidden - fix planned for v0.3.2. Legacy DELETE 500 stays documented, not fixed. Run 14 timeout was a flake; the rerun passed.",
+        "Staged example of how this section reads once real runs exist: a task like deprecate-route could regress with the pack - say 2 of 3 runs missed the docs update - and the failure would stay listed here, not hidden, with the fix tracked for the next version. No benchmark runs happened for this sample report; the narrative is illustrative sample text.",
       reproduce:
         "Pinned in this report (sample values): seed pp034-20261112, model claude-sonnet-4.6, task-repo snapshot pp-tasks-2026-11-12. Illustrative identifiers only: no task repository, environment record or raw logs exist for this sample.",
     },

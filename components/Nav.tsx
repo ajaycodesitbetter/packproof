@@ -12,10 +12,7 @@ export default function Nav({ active, searchQuery = "" }: { active?: string; sea
         <div className="nav-links">
           <Link className={active === "skills" ? "active" : ""} href="/skills">Skills</Link>
           <Link className={active === "packs" ? "active" : ""} href="/packs">Packs</Link>
-          <Link className={active === "method" ? "active" : ""} href="/method">Methodology</Link>
-          <Link className={active === "changelog" ? "active" : ""} href="/changelog">Changelog</Link>
-          <Link className={active === "categories" ? "active" : ""} href="/packs#categories">Categories</Link>
-          <Link className={active === "discover" ? "active" : ""} href="/discover">Discover</Link>
+          <Link className={active === "discover" ? "active" : ""} href="/discover">Discover <span className="nav-tag">unvetted</span></Link>
         </div>
         <div className="nav-right">
           <SearchBox defaultQuery={searchQuery} />

@@ -1,9 +1,6 @@
-export type AgentId = "claude" | "codex" | "antigravity";
-export const AGENT_GUIDES = {
-  claude: { name: "Claude Code", mark: "C", path: ".claude/skills/<name>/SKILL.md", source: "https://code.claude.com/docs/en/skills", note: "Project-local skills. Claude web uploads use a different flow." },
-  codex: { name: "Codex", mark: ">_", path: ".agents/skills/<name>/SKILL.md", source: "https://developers.openai.com/codex/skills", note: "Local CLI / IDE skills. Plugins may include extra tools and permissions." },
-  antigravity: { name: "Antigravity", mark: "A", path: ".agents/skills/<name>/SKILL.md", source: "https://antigravity.google/docs/skills", note: "Current default; older .agent/skills folders remain supported. Reload skills after adding." },
-} as const;
+export type { AgentId } from "./agents";
+export { AGENT_GUIDES } from "./agents";
+import type { AgentId } from "./agents";
 export const TASKS = ["All tasks", "Code & testing", "Design & UI", "Research & writing", "Video & motion", "Documents"] as const;
 export type Task = typeof TASKS[number];
 export interface SkillPick { id: string; name: string; maker: string; task: Task; subtask: string; summary: string; useFor: string; caution: string; agents: AgentId[]; source: string; license: string; kind: "collection" | "skill"; }

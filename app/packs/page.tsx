@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PackCard from "@/components/PackCard";
 import { getAllPacks, getCategories, normalizeCategory, searchPacks, fmtDate } from "@/lib/packs";
+import { JOBS, jobCounts } from "@/lib/jobs";
 
 export const metadata: Metadata = {
   title: "The registry - PackProof",
@@ -30,6 +31,8 @@ export default async function PacksPage({
 
   const cats = getCategories();
   const total = cats.reduce((n, c) => n + c.count, 0);
+  const counts = jobCounts();
+  const countsTotal = Object.values(counts).reduce((a, b) => a + b, 0);
   // Newest pack release in the registry data, not a hand-typed date that
   // silently goes stale.
   const lastUpdated = fmtDate(getAllPacks().map((p) => p.released).sort().at(-1)!);
@@ -51,7 +54,7 @@ export default async function PacksPage({
           </div>
           <p className="task">
             Every pack is a small workflow file for your coding agent. Statuses: sample report means the
-            demo evidence format is filled in; in testing means nothing is claimed yet.
+            demo evidence format is filled in with staged rows; not evaluated means no evaluation results exist yet.
           </p>
         </section>
         <div className="toolbar">
@@ -60,6 +63,15 @@ export default async function PacksPage({
             <input type="search" name="q" placeholder="Filter the registry, e.g. migration" defaultValue={q} aria-label="Filter the registry" />
             <button type="submit">Search</button>
           </form>
+        </div>
+        <div className="catrow">
+          <span className="catlbl">By job</span>
+          {JOBS.map((j) => (
+            <Link key={j.id} className="chip" href={`/skills?job=${j.id}`}>
+              {j.name} <i>{counts[j.id] ?? 0}</i>
+            </Link>
+          ))}
+          <span className="chip-note">counts cover all {countsTotal} workflows (packs + upstream picks); chips open the field guide</span>
         </div>
         <div className="catrow" id="categories">
           <span className="catlbl">Category</span>
