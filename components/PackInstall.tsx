@@ -5,7 +5,8 @@ import { AGENT_GUIDES, AGENT_IDS, AgentId, FIT_LABEL } from "@/lib/agents";
 export default function PackInstall({slug, version}: {slug: string; version: string}) {
   const [agent, setAgent] = useState<AgentId | "download">("download");
   const guide = agent === "download" ? null : AGENT_GUIDES[agent];
-  const site = typeof window !== "undefined" ? window.location.origin : "https://packproof.ajaymathuriya.com";
+  // Downloads always use the production origin, including on review previews.
+  const site = "https://packproof.ajaymathuriya.com";
   const folder = guide?.path ? guide.path.replace("<name>", slug) : `.packs/${slug}`;
   const command = `mkdir -p ${folder} && curl -fSL "${site}/api/packs/${slug}/download?version=${encodeURIComponent(version)}" -o ${folder}/SKILL.md`;
   return <div className="pack-install-guide">
